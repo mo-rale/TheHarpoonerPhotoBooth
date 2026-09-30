@@ -1,0 +1,8 @@
+{
+  "name": "photobooth",
+  "version": "1.0.0",
+  "description": "Local-only photobooth app (Canon R50 as webcam)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2" }
+}

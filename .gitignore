@@ -1,0 +1,20 @@
+node_modules/
+
+# Locally captured photo strips
+photos/*
+!photos/.gitkeep
+
+# Local logs and temporary files
+*.log
+*.tmp
+npm-debug.log*
+
+# Environment files
+.env
+.env.*
+
+# OS and editor metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#030821">
+  <title>The Harpooner PhotoBooth</title>
+  <link rel="stylesheet" href="style.css?v=20260930-16">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <div id="flash" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#" id="brandHome" aria-label="Return home">
+      <img class="brand-logo" src="harpooner-logo.jpg" alt="">
+      <span class="brand-copy"><strong id="brandName">The Harpooner</strong><small>PhotoBooth</small></span>
+    </a>
+    <div class="status-pill"><span></span> Local booth</div>
+  </header>
+
+  <main class="app-shell">
+    <section id="select" class="screen active" aria-labelledby="selectTitle">
+      <div class="intro">
+        <img class="hero-logo" src="harpooner-logo.jpg" alt="The Harpooner Bisucandijay Campus logo">
+        <p class="eyebrow">The agent of truth presents</p>
+        <h1 id="selectTitle">Who’s joining your <em>photo booth?</em></h1>
+        <p>Capture four honest moments, choose your finish, and take home a Harpooner keepsake.</p>
+      </div>
+      <div class="booth-grid">
+        <button class="booth-card selected" type="button" aria-pressed="true">
+          <span class="card-icon">✦</span><span class="card-state">Selected <b>✓</b></span>
+          <span class="card-kicker">Start here</span><strong>Solo Booth</strong>
+          <small>Use this camera, find your best pose, and leave with a finished photo strip.</small>
+          <span class="card-action">Select booth <b>→</b></span>
+        </button>
+      </div>
+      <div class="screen-footer">
+        <p>Your photos stay on this computer.</p>
+        <button id="continueBtn" class="primary" type="button">Continue <span>→</span></button>
+      </div>
+    </section>
+
+    <section id="cameraCheck" class="screen" aria-labelledby="checkTitle">
+      <div class="intro compact">
+        <p class="eyebrow">Almost ready</p>
+        <h1 id="checkTitle">Check your <em>camera.</em></h1>
+        <p>Make sure you’re centered, comfortable, and ready before choosing your photo strip.</p>
+      </div>
+      <div class="check-grid">
+        <article class="panel camera-panel">
+          <div class="panel-heading"><span><small>Camera test</small><strong>Live preview</strong></span><span id="cameraStatus" class="ready-pill">Starting</span></div>
+          <div class="video-frame">
+            <video id="cam" autoplay playsinline muted></video>
+            <div id="cameraLoading" class="camera-loading"><span class="camera-glyph">▣</span><strong>Starting your camera</strong><small>Allow camera access when your browser asks.</small></div>
+            <div class="corner corner-tl"></div><div class="corner corner-tr"></div><div class="corner corner-bl"></div><div class="corner corner-br"></div>
+          </div>
+          <div class="camera-meta"><span>◉ <b>Live</b></span><span id="cameraLabel">Camera preview</span></div>
+          <label class="camera-picker" for="cameraSelect">
+            <span><small>Input camera</small><strong>Choose your camera</strong></span>
+            <span class="camera-picker-actions">
+              <select id="cameraSelect" aria-label="Input camera" disabled>
+                <option>Looking for cameras…</option>
+              </select>
+              <button id="refreshCameras" type="button" title="Refresh camera list" aria-label="Refresh camera list">↻</button>
+            </span>
+          </label>
+        </article>
+        <aside class="panel checklist">
+          <div class="panel-heading"><span><small>Before we start</small><strong>Quick camera check</strong></span></div>
+          <ul>
+            <li><b>✓</b><span><strong>Good lighting</strong><small>Face a window or use a bright light in front of you.</small></span></li>
+            <li><b>✓</b><span><strong>Center yourself</strong><small>Leave a little room around everyone in the frame.</small></span></li>
+            <li><b>✓</b><span><strong>Clear your background</strong><small>A simple background keeps the focus on you.</small></span></li>
+          </ul>
+          <div class="notice"><span>▣</span><div><strong>Four photos coming up</strong><small>Each photo gets a three-second countdown.</small></div></div>
+        </aside>
+      </div>
+      <p id="camError" class="error" hidden></p>
+      <div class="screen-footer">
+        <p id="cameraHint">We’ll let you know when the camera is ready.</p>
+        <div class="camera-footer-actions"><a id="previewWithoutCamera" class="secondary" href="index.html?preview=1" hidden>Preview without camera</a><a id="enterPreviewBooth" class="primary" href="index.html?preview=booth" hidden>Continue <span>→</span></a><button id="enterBoothBtn" class="primary" type="button" disabled>Continue <span>→</span></button></div>
+      </div>
+    </section>
+
+    <section id="booth" class="screen booth-screen" aria-labelledby="boothTitle">
+      <div class="booth-titlebar">
+        <button id="backToCheck" class="text-button" type="button">← Back</button>
+        <div><small>Solo session</small><strong id="boothTitle">Photo Booth</strong></div>
+        <span class="ready-pill is-ready">● Camera ready</span>
+      </div>
+      <div class="capture-grid">
+        <article class="capture-stage panel">
+          <div class="video-frame booth-video">
+            <video id="boothCam" autoplay playsinline muted></video>
+            <div class="live-badge">● Live · Original</div><div id="shotBadge" class="shot-badge">Photo 1 of 4</div>
+            <div id="countdown" class="countdown"></div>
+            <div class="corner corner-tl"></div><div class="corner corner-tr"></div><div class="corner corner-bl"></div><div class="corner corner-br"></div>
+          </div>
+          <div class="capture-bar"><span id="captureMessage">Ready when you are.</span><button id="captureBtn" class="shutter" type="button"><span>▣</span> Start photos</button></div>
+        </article>
+        <aside class="panel shot-panel">
+          <div class="panel-heading"><span><small>Your shots</small><strong>Photo strip</strong></span><span id="shotProgress">0/4</span></div>
+          <div id="thumbGrid" class="thumb-grid"></div>
+          <div class="session-settings">
+            <div><small>Timer</small><strong>3 sec</strong></div><div><small>Photos</small><strong>4 shots</strong></div><div><small>Filter</small><strong>Original</strong></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="designer" class="screen designer-screen" aria-labelledby="designerTitle">
+      <div class="intro compact left">
+        <p class="eyebrow">Make it yours</p><h1 id="designerTitle">Choose your <em>strip style.</em></h1><p>Pick a finish, then print it or save a digital copy.</p>
+      </div>
+      <div class="designer-grid">
+        <div class="theme-browser">
+          <div id="themeTabs" class="theme-tabs" aria-label="Design event tabs"></div>
+          <div id="themeGrid" class="theme-grid"></div>
+        </div>
+        <aside class="strip-preview panel">
+          <div class="panel-heading"><span><small>Final strip</small><strong>Your photos</strong></span><span class="ready-pill is-ready">Ready</span></div>
+          <div class="strip-stage"><img id="stripImg" alt="Your finished photo strip"></div>
+          <div class="print-config" hidden aria-hidden="true">
+            <div class="print-config-heading"><span><small>Print setup</small><strong>Paper &amp; sizing</strong></span><span id="printSummary">1 strip · 2 in wide</span></div>
+            <div class="print-fields">
+              <label><span>Paper</span><select id="paperSize"><option value="a4">A4</option><option value="letter">Letter</option></select></label>
+              <label><span>Orientation</span><select id="paperOrientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
+              <label><span>Copies</span><select id="printCopies"><option value="1">1 strip</option><option value="2">2 strips</option><option value="3">3 strips</option><option value="4">4 strips</option></select></label>
+              <label><span>Strip width</span><select id="stripWidth"><option value="1.75">1.75 in</option><option value="2" selected>2 in</option><option value="2.5">2.5 in</option><option value="3">3 in</option><option value="4">4 in · A4</option></select></label>
+            </div>
+          </div>
+          <div class="final-actions">
+            <button id="againBtn" class="secondary" type="button">Retake</button>
+            <a id="downloadBtn" class="secondary" download="the-harpooner-photo-strip.jpg">Download</a>
+            <button id="printBtn" class="primary" type="button">Print strip</button>
+          </div>
+          <button id="doneBtn" class="done-link" type="button">Finish &amp; save session</button>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <dialog id="printPreviewDialog" class="print-preview-dialog">
+    <div class="print-preview-head">
+      <div><small>Print preview</small><strong id="printPreviewTitle">Your strips</strong></div>
+      <button id="closePrintPreview" type="button" aria-label="Close print preview">×</button>
+    </div>
+    <div class="print-preview-content">
+      <div class="print-preview-workspace">
+        <div class="print-preview-canvas">
+          <div id="printPreviewPages" class="print-preview-pages"></div>
+        </div>
+        <aside class="print-preview-sidebar" aria-label="Print document settings">
+          <div class="print-preview-sidebar-head">
+            <small>Document settings</small>
+            <strong>Prepare your print</strong>
+            <p id="printPreviewDetails"></p>
+          </div>
+          <div class="print-preview-editor">
+            <label><span>Paper</span><select id="previewPaperSize"><option value="a4">A4</option><option value="letter">Letter</option></select></label>
+            <label><span>Orientation</span><select id="previewOrientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
+            <label><span>Copies</span><select id="previewCopies"><option value="1">1 strip</option><option value="2">2 strips</option><option value="3">3 strips</option><option value="4">4 strips</option></select></label>
+            <label><span>Strip width</span><select id="previewStripWidth"><option value="1.75">1.75 in</option><option value="2">2 in</option><option value="2.5">2.5 in</option><option value="3">3 in</option><option value="4">4 in · A4</option></select></label>
+            <label><span>Page margin</span><select id="pageMargin"><option value="0">Borderless</option><option value="0.1" selected>0.10 in</option><option value="0.25">0.25 in</option><option value="0.5">0.50 in</option></select></label>
+            <label><span>Strip spacing</span><select id="stripGap"><option value="0">None</option><option value="0.05" selected>0.05 in</option><option value="0.1">0.10 in</option><option value="0.2">0.20 in</option></select></label>
+            <label><span>Page position</span><select id="pageAlignment"><option value="center">Centered</option><option value="start">Top edge</option></select></label>
+            <label><span>Layout</span><select id="layoutMode"><option value="auto">Automatic</option><option value="free">Free arrange</option></select></label>
+            <button id="resetArrangement" class="preview-reset" type="button">Reset arrangement</button>
+          </div>
+          <p class="printer-note">For the correct physical size, choose the same paper and orientation, set Scale to 100% or Actual size, use no extra browser margins, and turn off headers and footers.</p>
+          <div class="print-preview-actions">
+            <button id="backFromPrintPreview" class="secondary" type="button">Back</button>
+            <button id="confirmPrint" class="primary" type="button">Continue to printer</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </dialog>
+  <div id="printSheet" aria-hidden="true"></div>
+  <a id="adminLink" href="admin.html">Staff gallery</a>
+  <script src="app.js?v=20260930-16"></script>
+</body>
+</html>
