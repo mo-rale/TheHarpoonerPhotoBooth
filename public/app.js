@@ -249,7 +249,24 @@ function drawDesignElements(ctx, width, height, theme) {
     ctx.translate(x, y);
     ctx.rotate((Number(element.rotation) || 0) * Math.PI / 180);
     ctx.globalAlpha = Math.max(.2, Math.min(1, (Number(element.opacity) || 100) / 100));
-    if (element.type === 'shape') {
+    if (element.type === 'photo') {
+      const frameIndex = Math.max(0, Math.min(frames.length - 1, Number(element.slot || 1) - 1));
+      const frame = frames[frameIndex];
+      if (frame) {
+        const targetWidth = width * (Number(element.size) || 70) / 100;
+        const targetHeight = height * (Number(element.height) || 18) / 100;
+        const sourceWidth = frame.width;
+        const sourceHeight = frame.height;
+        const sourceRatio = sourceWidth / sourceHeight;
+        const targetRatio = targetWidth / targetHeight;
+        let sx = 0; let sy = 0; let sw = sourceWidth; let sh = sourceHeight;
+        if (sourceRatio > targetRatio) { sw = sourceHeight * targetRatio; sx = (sourceWidth - sw) / 2; }
+        else { sh = sourceWidth / targetRatio; sy = (sourceHeight - sh) / 2; }
+        ctx.filter = ({ bw:'grayscale(1)', sepia:'sepia(.72) contrast(1.04)', vivid:'saturate(1.35) contrast(1.12)' })[theme.photoEffect] || 'none';
+        ctx.drawImage(frame, sx, sy, sw, sh, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight);
+        ctx.filter = 'none';
+      }
+    } else if (element.type === 'shape') {
       ctx.fillStyle = element.color || '#ffffff';
       if (element.shape === 'circle') {
         ctx.beginPath(); ctx.arc(0, 0, size / 2, 0, Math.PI * 2); ctx.fill();
@@ -292,7 +309,8 @@ function buildStrip(theme = activeTheme) {
   ctx.fillStyle = theme.bg;
   ctx.fillRect(0, 0, width, height);
   drawPattern(ctx, width, height, theme);
-  frames.forEach((frame, index) => {
+  const hasCustomPhotoBoxes = (theme.elements || []).some((element) => element.type === 'photo');
+  if (!hasCustomPhotoBoxes) frames.forEach((frame, index) => {
     const y = pad + index * (photoHeight + gap);
     ctx.fillStyle = theme.border;
     ctx.fillRect(pad - borderWidth, y - borderWidth, photoWidth + borderWidth * 2, photoHeight + borderWidth * 2);

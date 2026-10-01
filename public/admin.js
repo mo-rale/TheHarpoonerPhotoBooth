@@ -80,6 +80,7 @@ function formData() {
 }
 
 function elementLabel(element) {
+  if (element.type === 'photo') return `Photo box ${element.slot || 1}`;
   if (element.type === 'image') return 'Uploaded image';
   if (element.type === 'shape') return `${element.shape || 'rectangle'} shape`;
   if (element.type === 'emoji') return `Sticker ${element.content || '★'}`;
@@ -101,7 +102,12 @@ function renderCanvasElements() {
     node.style.transform = `translate(-50%,-50%) rotate(${element.rotation || 0}deg)`;
     node.setAttribute('aria-label', `Move ${elementLabel(element)}`);
 
-    if (element.type === 'image') {
+    if (element.type === 'photo') {
+      node.classList.add('photo-slot-element');
+      node.style.width = `${element.size}%`;
+      node.style.height = `${element.height || 18}%`;
+      node.textContent = `PHOTO ${element.slot || 1}`;
+    } else if (element.type === 'image') {
       node.style.width = `${element.size}%`;
       const image = document.createElement('img'); image.src = element.src; image.alt = '';
       node.appendChild(image);
@@ -143,6 +149,7 @@ function renderCanvasElements() {
         const startDistance = Math.max(1, Math.hypot(event.clientX - centerX, event.clientY - centerY));
         const startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI;
         const startSize = element.size;
+        const startHeight = element.height || 18;
         const startRotation = element.rotation || 0;
         let changed = false;
         handle.setPointerCapture(event.pointerId);
@@ -151,10 +158,16 @@ function renderCanvasElements() {
           changed = true;
           if (mode === 'resize') {
             const distance = Math.hypot(moveEvent.clientX - centerX, moveEvent.clientY - centerY);
-            const maxSize = element.type === 'image' ? 100 : 60;
+            const maxSize = element.type === 'image' || element.type === 'photo' ? 100 : 60;
             element.size = Math.max(4, Math.min(maxSize, Math.round(startSize * distance / startDistance)));
-            if (element.type === 'image' || element.type === 'shape') node.style.width = `${element.size}%`;
+            if (element.type === 'image' || element.type === 'shape' || element.type === 'photo') node.style.width = `${element.size}%`;
             if (element.type === 'shape') node.style.height = element.shape === 'line' ? `${Math.max(3, element.size * .12)}px` : `${Math.max(4, element.size * .6)}%`;
+            if (element.type === 'photo') {
+              element.height = Math.max(4, Math.min(100, Math.round(startHeight * distance / startDistance)));
+              node.style.height = `${element.height}%`;
+              $('elementHeight').value = String(element.height);
+              $('elementHeightValue').textContent = String(element.height);
+            }
             if (element.type === 'text' || element.type === 'emoji') node.style.fontSize = `${Math.max(10, element.size * 2.2)}px`;
             $('elementSize').value = String(element.size);
             $('elementSizeValue').textContent = String(element.size);
@@ -230,7 +243,7 @@ function renderLayers() {
   [...designElements].reverse().forEach((element, reverseIndex) => {
     const row = document.createElement('button'); row.type = 'button';
     row.className = `layer-row ${element.id === selectedElementId ? 'active' : ''}`;
-    const icon = ({ image:'▧', shape:'◆', emoji:'★', text:'T' })[element.type] || 'T';
+    const icon = ({ image:'▧', shape:'◆', photo:'▣', emoji:'★', text:'T' })[element.type] || 'T';
     row.innerHTML = `<b class="layer-icon">${icon}</b><span></span><small>Layer ${designElements.length - reverseIndex}</small>`;
     row.querySelector('span').textContent = elementLabel(element);
     row.addEventListener('click', () => selectElement(element.id));
@@ -249,6 +262,8 @@ function renderElementInspector() {
   $('elementContentField').hidden = !hasContent;
   $('textStyleFields').hidden = element.type !== 'text';
   $('shapeField').hidden = element.type !== 'shape';
+  $('elementColorField').hidden = element.type === 'photo' || element.type === 'image';
+  $('photoHeightField').hidden = element.type !== 'photo';
   $('elementContent').value = element.content || '';
   $('elementFont').value = element.fontFamily || 'editorial';
   $('elementWeight').value = String(element.fontWeight || 700);
@@ -256,11 +271,14 @@ function renderElementInspector() {
   $('elementColor').value = element.color || '#ffffff';
   $('elementX').value = String(element.x ?? 50);
   $('elementY').value = String(element.y ?? 50);
+  $('elementSize').max = element.type === 'image' || element.type === 'photo' ? '100' : '60';
   $('elementSize').value = String(element.size ?? 14);
-  $('elementSize').max = element.type === 'image' ? '100' : '60';
+  $('elementSizeLabel').textContent = element.type === 'photo' ? 'Width' : 'Size';
+  $('elementHeight').value = String(element.height ?? 18);
   $('elementRotation').value = String(element.rotation || 0);
   $('elementOpacity').value = String(element.opacity ?? 100);
   $('elementSizeValue').textContent = String(element.size ?? 14);
+  $('elementHeightValue').textContent = String(element.height ?? 18);
   $('elementRotationValue').textContent = `${element.rotation || 0}°`;
   $('elementOpacityValue').textContent = `${element.opacity ?? 100}%`;
 }
@@ -281,10 +299,12 @@ function addElement(type, value, extra = {}) {
   remember();
   const defaults = {
     id: makeElementId(), type,
-    content: type === 'image' || type === 'shape' ? '' : value,
+    content: type === 'image' || type === 'shape' || type === 'photo' ? '' : value,
     src: type === 'image' ? value : '',
     x: 50, y: 20 + (designElements.length % 7) * 10,
-    size: type === 'text' ? 12 : type === 'shape' ? 24 : 14,
+    size: type === 'text' ? 12 : type === 'shape' ? 24 : type === 'photo' ? 78 : 14,
+    height: type === 'photo' ? 18 : 14,
+    slot: type === 'photo' ? Math.min(4, designElements.filter((item) => item.type === 'photo').length + 1) : 1,
     rotation: 0, opacity: 100, color: '#ffffff',
     fontFamily: 'editorial', fontWeight: 700, shape: 'rectangle',
   };
@@ -305,9 +325,11 @@ function updateSelectedElement() {
   element.x = Number($('elementX').value);
   element.y = Number($('elementY').value);
   element.size = Number($('elementSize').value);
+  if (element.type === 'photo') element.height = Number($('elementHeight').value);
   element.rotation = Number($('elementRotation').value);
   element.opacity = Number($('elementOpacity').value);
   $('elementSizeValue').textContent = String(element.size);
+  $('elementHeightValue').textContent = String(element.height || 18);
   $('elementRotationValue').textContent = `${element.rotation}°`;
   $('elementOpacityValue').textContent = `${element.opacity}%`;
   renderCanvasElements();
@@ -324,6 +346,7 @@ function updatePreview() {
   preview.style.setProperty('--preview-accent', design.accent);
   preview.style.setProperty('--preview-border', design.border);
   preview.className = `mini-strip ${design.pattern} ${design.photoEffect}`;
+  preview.classList.toggle('custom-photo-layout', design.elements.some((element) => element.type === 'photo'));
   preview.style.padding = `${Math.max(8, design.padding / 4)}px`;
   preview.style.gap = `${Math.max(4, design.gap / 3)}px`;
   preview.style.borderWidth = `${Math.min(10, Math.max(0, design.borderWidth))}px`;
@@ -477,6 +500,7 @@ document.querySelectorAll('[data-text-preset]').forEach((button) => button.addEv
   const preset = presets[button.dataset.textPreset]; addElement('text', preset.content, preset);
 }));
 document.querySelectorAll('[data-shape]').forEach((button) => button.addEventListener('click', () => addElement('shape', '', { shape:button.dataset.shape, color:$('designAccent').value, size:button.dataset.shape === 'line' ? 35 : 24 })));
+$('addPhotoBox').addEventListener('click', () => addElement('photo', '', { size:78, height:18, y:20 + designElements.filter((item) => item.type === 'photo').length * 20 }));
 document.querySelectorAll('[data-sticker]').forEach((button) => button.addEventListener('click', () => addElement('emoji', button.dataset.sticker)));
 $('elementUpload').addEventListener('change', (event) => {
   const file = event.target.files[0]; if (!file) return;
@@ -492,17 +516,41 @@ function removeCanvaGreenScreen(image) {
   context.drawImage(image, 0, 0);
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
   let removed = 0;
-  for (let index = 0; index < pixels.data.length; index += 4) {
-    const red = pixels.data[index];
-    const green = pixels.data[index + 1];
-    const blue = pixels.data[index + 2];
-    if (red <= 28 && green >= 242 && blue <= 28) {
-      pixels.data[index + 3] = 0;
-      removed += 1;
+  const rowBounds = [];
+  for (let y = 0; y < canvas.height; y += 1) {
+    let minX = canvas.width;
+    let maxX = -1;
+    for (let x = 0; x < canvas.width; x += 1) {
+      const index = (y * canvas.width + x) * 4;
+      const red = pixels.data[index];
+      const green = pixels.data[index + 1];
+      const blue = pixels.data[index + 2];
+      if (red <= 28 && green >= 242 && blue <= 28) {
+        pixels.data[index + 3] = 0;
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        removed += 1;
+      }
     }
+    if (maxX >= 0) rowBounds.push({ y, minX, maxX });
   }
   context.putImageData(pixels, 0, 0);
-  return { source:canvas.toDataURL('image/png'), removed };
+  const boxes = [];
+  rowBounds.forEach((row) => {
+    const current = boxes.at(-1);
+    if (current && row.y <= current.maxY + 2) {
+      current.minX = Math.min(current.minX, row.minX);
+      current.maxX = Math.max(current.maxX, row.maxX);
+      current.maxY = row.y;
+    } else {
+      boxes.push({ minX:row.minX, maxX:row.maxX, minY:row.y, maxY:row.y });
+    }
+  });
+  const meaningfulBoxes = boxes
+    .filter((box) => (box.maxX - box.minX + 1) * (box.maxY - box.minY + 1) >= canvas.width * canvas.height * .005)
+    .sort((a, b) => a.minY - b.minY)
+    .slice(0, 4);
+  return { source:canvas.toDataURL('image/png'), removed, boxes:meaningfulBoxes, width:canvas.width, height:canvas.height };
 }
 
 $('canvaImport').addEventListener('change', (event) => {
@@ -528,10 +576,33 @@ $('canvaImport').addEventListener('change', (event) => {
         event.target.value = '';
         return;
       }
-      addElement('image', processed.source, { size:100, x:50, y:50, rotation:0, opacity:100 });
+      if (!processed.boxes.length) {
+        $('status').textContent = 'Green was removed, but no large photo boxes were detected. Make each box a solid #00FF00 rectangle.';
+        event.target.value = '';
+        return;
+      }
+      remember();
+      const photoBoxes = processed.boxes.map((box, index) => ({
+        id:makeElementId(), type:'photo', content:'', src:'', slot:index + 1,
+        x:Math.round(((box.minX + box.maxX + 1) / 2 / processed.width) * 100),
+        y:Math.round(((box.minY + box.maxY + 1) / 2 / processed.height) * 100),
+        size:Math.max(4, Math.min(100, Math.round(((box.maxX - box.minX + 1) / processed.width) * 100))),
+        height:Math.max(4, Math.min(100, Math.round(((box.maxY - box.minY + 1) / processed.height) * 100))),
+        rotation:0, opacity:100, color:'#ffffff', fontFamily:'editorial', fontWeight:700, shape:'rectangle',
+      }));
+      const overlay = {
+        id:makeElementId(), type:'image', content:'', src:processed.source, x:50, y:50, size:100,
+        height:100, slot:1, rotation:0, opacity:100, color:'#ffffff', fontFamily:'editorial', fontWeight:700, shape:'rectangle',
+      };
+      designElements.push(...photoBoxes, overlay);
+      selectedElementId = photoBoxes[0].id;
+      renderElementStudio();
+      updatePreview();
+      showPane('layers');
+      const boxMessage = processed.boxes.length === 4 ? 'Four adjustable photo boxes were created.' : `${processed.boxes.length} adjustable photo boxes were detected.`;
       $('status').textContent = Math.abs(ratio - (2 / 6)) < .08
-        ? 'Canva design imported. Green boxes are now transparent photo windows.'
-        : 'Green boxes removed. For a full-strip fit, export from Canva using a 2:6 page ratio.';
+        ? `Canva design imported. ${boxMessage}`
+        : `${boxMessage} For a full-strip fit, export from Canva using a 2:6 page ratio.`;
       event.target.value = '';
     };
     image.onerror = () => { $('status').textContent = 'Could not read that Canva export.'; event.target.value = ''; };
@@ -552,7 +623,7 @@ $('designForm').addEventListener('submit', async (event) => {
   $('status').textContent = 'Saved'; setSaveState('Saved design'); $('formTitle').textContent = 'Edit design'; await loadDesigns(); renderElementStudio();
 });
 
-const inspectorInputs = ['elementContent','elementFont','elementWeight','elementShape','elementColor','elementX','elementY','elementSize','elementRotation','elementOpacity'];
+const inspectorInputs = ['elementContent','elementFont','elementWeight','elementShape','elementColor','elementX','elementY','elementSize','elementHeight','elementRotation','elementOpacity'];
 inspectorInputs.forEach((id) => {
   $(id).addEventListener('focus', () => { if (!pendingInspectorSnapshot) pendingInspectorSnapshot = elementSnapshot(); });
   $(id).addEventListener('input', updateSelectedElement);

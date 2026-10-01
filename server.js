@@ -33,7 +33,7 @@ const clampNumber = (value, min, max, fallback) => {
   return Number.isFinite(number) ? Math.min(max, Math.max(min, Math.round(number))) : fallback;
 };
 const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : []).slice(0, 40).map((element, index) => {
-  const type = allowed(element && element.type, ['text', 'emoji', 'image', 'shape'], 'text');
+  const type = allowed(element && element.type, ['text', 'emoji', 'image', 'shape', 'photo'], 'text');
   const imageSource = type === 'image' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(element.src || '') && String(element.src).length <= 3000000
     ? String(element.src)
     : '';
@@ -41,11 +41,13 @@ const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : [])
   return {
     id: cleanText(element.id, 50) || `element-${index + 1}`,
     type,
-    content: type === 'image' || type === 'shape' ? '' : cleanText(element.content, type === 'emoji' ? 12 : 80),
+    content: type === 'image' || type === 'shape' || type === 'photo' ? '' : cleanText(element.content, type === 'emoji' ? 12 : 80),
     src: imageSource,
     x: clampNumber(element.x, 0, 100, 50),
     y: clampNumber(element.y, 0, 100, 50),
-    size: clampNumber(element.size, 4, type === 'image' ? 100 : 60, type === 'text' ? 10 : 14),
+    size: clampNumber(element.size, 4, type === 'image' || type === 'photo' ? 100 : 60, type === 'text' ? 10 : 14),
+    height: clampNumber(element.height, 4, 100, 18),
+    slot: clampNumber(element.slot, 1, 4, 1),
     rotation: clampNumber(element.rotation, -180, 180, 0),
     opacity: clampNumber(element.opacity, 20, 100, 100),
     color: cleanColor(element.color) || '#ffffff',

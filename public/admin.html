@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#02051d">
   <title>The Harpooner PhotoBooth · Design Studio</title>
-  <link rel="stylesheet" href="admin.css?v=20261001-5">
+  <link rel="stylesheet" href="admin.css?v=20261001-6">
 </head>
 <body>
   <header class="topbar">
@@ -53,6 +53,7 @@
             <button type="button" data-shape="circle" title="Circle"><span class="shape circle"></span></button>
             <button type="button" data-shape="line" title="Line"><span class="shape line"></span></button>
           </div>
+          <button class="photo-box-button" type="button" id="addPhotoBox">＋ Add adjustable photo box</button>
           <div class="pane-heading compact"><div><small>QUICK ASSETS</small><strong>Stickers</strong></div></div>
           <div class="sticker-palette" aria-label="Quick stickers">
             <button type="button" data-sticker="❤">❤</button><button type="button" data-sticker="✨">✨</button><button type="button" data-sticker="★">★</button><button type="button" data-sticker="🎉">🎉</button><button type="button" data-sticker="🎓">🎓</button><button type="button" data-sticker="🌹">🌹</button><button type="button" data-sticker="⚓">⚓</button><button type="button" data-sticker="📸">📸</button>
@@ -148,12 +149,13 @@
               <label class="field"><span>Weight</span><select id="elementWeight"><option value="400">Regular</option><option value="700">Bold</option><option value="900">Heavy</option></select></label>
             </div>
             <label id="shapeField" class="field" hidden><span>Shape</span><select id="elementShape"><option value="rectangle">Rectangle</option><option value="circle">Circle</option><option value="line">Line</option></select></label>
-            <label class="color-field"><span>Element color</span><input id="elementColor" type="color" value="#ffffff"></label>
+            <label id="elementColorField" class="color-field"><span>Element color</span><input id="elementColor" type="color" value="#ffffff"></label>
             <div class="two-fields position-fields">
               <label class="field"><span>X position</span><input id="elementX" type="number" min="0" max="100" step="1"></label>
               <label class="field"><span>Y position</span><input id="elementY" type="number" min="0" max="100" step="1"></label>
             </div>
-            <label class="range-field"><span>Size <output id="elementSizeValue">14</output></span><input id="elementSize" type="range" min="4" max="60" value="14"></label>
+            <label class="range-field"><span><span id="elementSizeLabel">Size</span> <output id="elementSizeValue">14</output></span><input id="elementSize" type="range" min="4" max="60" value="14"></label>
+            <label id="photoHeightField" class="range-field" hidden><span>Height <output id="elementHeightValue">18</output></span><input id="elementHeight" type="range" min="4" max="100" value="18"></label>
             <label class="range-field"><span>Rotation <output id="elementRotationValue">0°</output></span><input id="elementRotation" type="range" min="-180" max="180" value="0"></label>
             <label class="range-field"><span>Opacity <output id="elementOpacityValue">100%</output></span><input id="elementOpacity" type="range" min="10" max="100" value="100"></label>
             <div class="align-grid" aria-label="Align element">
@@ -180,6 +182,6 @@
   </main>
 
   <dialog id="photoPreview" class="photo-preview"><div class="photo-preview-head"><strong id="photoPreviewName">Saved photo strip</strong><button id="photoPreviewClose" type="button">Close ×</button></div><div class="photo-preview-body"><img id="photoPreviewImage" alt="Saved photo strip preview"></div></dialog>
-  <script src="admin.js?v=20261001-5"></script>
+  <script src="admin.js?v=20261001-7"></script>
 </body>
 </html>
