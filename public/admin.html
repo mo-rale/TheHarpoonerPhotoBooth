@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#02051d">
   <title>The Harpooner PhotoBooth · Design Studio</title>
-  <link rel="stylesheet" href="admin.css?v=20261001-4">
+  <link rel="stylesheet" href="admin.css?v=20261001-5">
 </head>
 <body>
   <header class="topbar">
@@ -58,6 +58,9 @@
             <button type="button" data-sticker="❤">❤</button><button type="button" data-sticker="✨">✨</button><button type="button" data-sticker="★">★</button><button type="button" data-sticker="🎉">🎉</button><button type="button" data-sticker="🎓">🎓</button><button type="button" data-sticker="🌹">🌹</button><button type="button" data-sticker="⚓">⚓</button><button type="button" data-sticker="📸">📸</button>
           </div>
           <label class="upload-card">↑ Upload image<input id="elementUpload" type="file" accept="image/png,image/jpeg,image/webp" hidden><small>PNG, JPG, or WebP · up to 2 MB</small></label>
+          <div class="pane-heading compact"><div><small>IMPORT</small><strong>Canva design</strong></div></div>
+          <label class="upload-card canva-import">▧ Import Canva overlay<input id="canvaImport" type="file" accept="image/png,image/jpeg,image/webp" hidden><small>Export a transparent PNG in a 2:6 strip ratio · up to 2 MB</small></label>
+          <a class="canva-link" href="https://www.canva.com/" target="_blank" rel="noreferrer">Open Canva to export ↗</a>
         </div>
 
         <div id="layersPane" class="tool-pane">
@@ -177,6 +180,6 @@
   </main>
 
   <dialog id="photoPreview" class="photo-preview"><div class="photo-preview-head"><strong id="photoPreviewName">Saved photo strip</strong><button id="photoPreviewClose" type="button">Close ×</button></div><div class="photo-preview-body"><img id="photoPreviewImage" alt="Saved photo strip preview"></div></dialog>
-  <script src="admin.js?v=20261001-3"></script>
+  <script src="admin.js?v=20261001-4"></script>
 </body>
 </html>

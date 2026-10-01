@@ -151,7 +151,8 @@ function renderCanvasElements() {
           changed = true;
           if (mode === 'resize') {
             const distance = Math.hypot(moveEvent.clientX - centerX, moveEvent.clientY - centerY);
-            element.size = Math.max(4, Math.min(60, Math.round(startSize * distance / startDistance)));
+            const maxSize = element.type === 'image' ? 100 : 60;
+            element.size = Math.max(4, Math.min(maxSize, Math.round(startSize * distance / startDistance)));
             if (element.type === 'image' || element.type === 'shape') node.style.width = `${element.size}%`;
             if (element.type === 'shape') node.style.height = element.shape === 'line' ? `${Math.max(3, element.size * .12)}px` : `${Math.max(4, element.size * .6)}%`;
             if (element.type === 'text' || element.type === 'emoji') node.style.fontSize = `${Math.max(10, element.size * 2.2)}px`;
@@ -256,6 +257,7 @@ function renderElementInspector() {
   $('elementX').value = String(element.x ?? 50);
   $('elementY').value = String(element.y ?? 50);
   $('elementSize').value = String(element.size ?? 14);
+  $('elementSize').max = element.type === 'image' ? '100' : '60';
   $('elementRotation').value = String(element.rotation || 0);
   $('elementOpacity').value = String(element.opacity ?? 100);
   $('elementSizeValue').textContent = String(element.size ?? 14);
@@ -480,6 +482,29 @@ $('elementUpload').addEventListener('change', (event) => {
   const file = event.target.files[0]; if (!file) return;
   if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 2000000) { $('status').textContent = 'Use a PNG, JPG, or WebP image smaller than 2 MB.'; event.target.value = ''; return; }
   const reader = new FileReader(); reader.onload = () => { addElement('image', reader.result, { size:25 }); event.target.value = ''; }; reader.readAsDataURL(file);
+});
+$('canvaImport').addEventListener('change', (event) => {
+  const file = event.target.files[0]; if (!file) return;
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 2000000) {
+    $('status').textContent = 'Export the Canva design as a PNG, JPG, or WebP smaller than 2 MB.';
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const ratio = image.naturalWidth / image.naturalHeight;
+      addElement('image', reader.result, { size:100, x:50, y:50, rotation:0, opacity:100 });
+      $('status').textContent = Math.abs(ratio - (2 / 6)) < .08
+        ? 'Canva overlay imported at full-strip size.'
+        : 'Imported. For a full-strip fit, export from Canva using a 2:6 page ratio.';
+      event.target.value = '';
+    };
+    image.onerror = () => { $('status').textContent = 'Could not read that Canva export.'; event.target.value = ''; };
+    image.src = reader.result;
+  };
+  reader.readAsDataURL(file);
 });
 
 $('designForm').addEventListener('input', updatePreview);

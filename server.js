@@ -45,7 +45,7 @@ const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : [])
     src: imageSource,
     x: clampNumber(element.x, 0, 100, 50),
     y: clampNumber(element.y, 0, 100, 50),
-    size: clampNumber(element.size, 4, 45, type === 'text' ? 10 : 14),
+    size: clampNumber(element.size, 4, type === 'image' ? 100 : 60, type === 'text' ? 10 : 14),
     rotation: clampNumber(element.rotation, -180, 180, 0),
     opacity: clampNumber(element.opacity, 20, 100, 100),
     color: cleanColor(element.color) || '#ffffff',

@@ -72,10 +72,17 @@ The staff workspace supports:
 - Layer ordering, duplication, deletion, and one-click canvas alignment
 - Direct mouse handles for moving, resizing, and rotating canvas elements
 - Mouse and trackpad canvas navigation with drag-to-pan and cursor-centered zoom
+- Canva overlay import from transparent PNG/JPEG/WebP exports at full-strip size
 - Undo and redo, zoom controls, optional grid snapping, and keyboard nudging
 - Keyboard shortcuts for undo/redo, duplicate, delete, and fine positioning
 
 Designs are stored locally in `data/designs.json`.
+
+### Canva import
+
+Create the artwork in Canva using a **2 × 6 inch** page, leave the four photo openings transparent, and export it as a transparent PNG. In the Design Studio, open **Elements → Import Canva design** and select the exported file. It is added at full-strip size as the top layer and can still be moved, resized, rotated, reordered, or removed.
+
+A direct Canva account connection is not enabled by default because Canva requires a registered developer integration, OAuth authorization, and API credentials. The local PNG/JPEG/WebP import works without an internet connection or Canva account access from the booth.
 
 ### Developer preview
 
