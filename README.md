@@ -70,6 +70,7 @@ The staff workspace supports:
 - Draggable text, emoji stickers, and uploaded PNG/JPEG/WebP elements
 - Rectangle, circle, and line elements with color, size, rotation, and opacity controls
 - Layer ordering, duplication, deletion, and one-click canvas alignment
+- Direct mouse handles for moving, resizing, and rotating canvas elements
 - Undo and redo, zoom controls, optional grid snapping, and keyboard nudging
 - Keyboard shortcuts for undo/redo, duplicate, delete, and fine positioning
 

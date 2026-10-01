@@ -88,8 +88,9 @@ function renderCanvasElements() {
   const overlay = $('elementOverlay');
   overlay.replaceChildren();
   designElements.forEach((element) => {
-    const node = document.createElement('button');
-    node.type = 'button';
+    const node = document.createElement('div');
+    node.setAttribute('role', 'button');
+    node.tabIndex = 0;
     node.className = `canvas-element ${element.id === selectedElementId ? 'selected' : ''}`;
     node.style.left = `${element.x}%`;
     node.style.top = `${element.y}%`;
@@ -116,8 +117,79 @@ function renderCanvasElements() {
       node.textContent = element.content || (element.type === 'emoji' ? '★' : 'Your text');
     }
 
+    if (element.id === selectedElementId) {
+      const resizeHandle = document.createElement('span');
+      resizeHandle.className = 'transform-handle resize-handle';
+      resizeHandle.setAttribute('role', 'button');
+      resizeHandle.setAttribute('aria-label', `Resize ${elementLabel(element)}`);
+      resizeHandle.title = 'Drag to resize';
+
+      const rotateHandle = document.createElement('span');
+      rotateHandle.className = 'transform-handle rotate-handle';
+      rotateHandle.setAttribute('role', 'button');
+      rotateHandle.setAttribute('aria-label', `Rotate ${elementLabel(element)}`);
+      rotateHandle.title = 'Drag to rotate';
+
+      const startTransform = (event, mode) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const handle = event.currentTarget;
+        const beforeTransform = elementSnapshot();
+        const nodeBounds = node.getBoundingClientRect();
+        const centerX = nodeBounds.left + nodeBounds.width / 2;
+        const centerY = nodeBounds.top + nodeBounds.height / 2;
+        const startDistance = Math.max(1, Math.hypot(event.clientX - centerX, event.clientY - centerY));
+        const startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI;
+        const startSize = element.size;
+        const startRotation = element.rotation || 0;
+        let changed = false;
+        handle.setPointerCapture(event.pointerId);
+
+        const move = (moveEvent) => {
+          changed = true;
+          if (mode === 'resize') {
+            const distance = Math.hypot(moveEvent.clientX - centerX, moveEvent.clientY - centerY);
+            element.size = Math.max(4, Math.min(60, Math.round(startSize * distance / startDistance)));
+            if (element.type === 'image' || element.type === 'shape') node.style.width = `${element.size}%`;
+            if (element.type === 'shape') node.style.height = element.shape === 'line' ? `${Math.max(3, element.size * .12)}px` : `${Math.max(4, element.size * .6)}%`;
+            if (element.type === 'text' || element.type === 'emoji') node.style.fontSize = `${Math.max(10, element.size * 2.2)}px`;
+            $('elementSize').value = String(element.size);
+            $('elementSizeValue').textContent = String(element.size);
+            $('selectionStatus').textContent = `Size ${element.size}`;
+          } else {
+            const angle = Math.atan2(moveEvent.clientY - centerY, moveEvent.clientX - centerX) * 180 / Math.PI;
+            let rotation = Math.round(startRotation + angle - startAngle);
+            rotation = ((rotation + 180) % 360 + 360) % 360 - 180;
+            element.rotation = rotation;
+            node.style.transform = `translate(-50%,-50%) rotate(${rotation}deg)`;
+            $('elementRotation').value = String(rotation);
+            $('elementRotationValue').textContent = `${rotation}°`;
+            $('selectionStatus').textContent = `Rotation ${rotation}°`;
+          }
+        };
+        const finish = () => {
+          handle.removeEventListener('pointermove', move);
+          handle.removeEventListener('pointerup', finish);
+          handle.removeEventListener('pointercancel', finish);
+          if (changed) remember(beforeTransform);
+          renderElementStudio();
+        };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('pointerup', finish);
+        handle.addEventListener('pointercancel', finish);
+      };
+
+      resizeHandle.addEventListener('pointerdown', (event) => startTransform(event, 'resize'));
+      rotateHandle.addEventListener('pointerdown', (event) => startTransform(event, 'rotate'));
+      node.append(rotateHandle, resizeHandle);
+    }
+
     node.addEventListener('click', (event) => { event.stopPropagation(); selectElement(element.id); });
+    node.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectElement(element.id); }
+    });
     node.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('.transform-handle')) return;
       event.preventDefault();
       const beforeMove = elementSnapshot();
       selectedElementId = element.id;
@@ -136,11 +208,14 @@ function renderCanvasElements() {
         $('selectionStatus').textContent = `X ${element.x} · Y ${element.y}`;
       };
       node.addEventListener('pointermove', move);
-      node.addEventListener('pointerup', () => {
+      const finishMove = () => {
         node.removeEventListener('pointermove', move);
+        node.removeEventListener('pointercancel', finishMove);
         if (moved) remember(beforeMove);
         renderElementStudio();
-      }, { once:true });
+      };
+      node.addEventListener('pointerup', finishMove, { once:true });
+      node.addEventListener('pointercancel', finishMove, { once:true });
     });
     overlay.appendChild(node);
   });
