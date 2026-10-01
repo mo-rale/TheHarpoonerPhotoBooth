@@ -32,8 +32,8 @@ const clampNumber = (value, min, max, fallback) => {
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, Math.round(number))) : fallback;
 };
-const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : []).slice(0, 24).map((element, index) => {
-  const type = allowed(element && element.type, ['text', 'emoji', 'image'], 'text');
+const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : []).slice(0, 40).map((element, index) => {
+  const type = allowed(element && element.type, ['text', 'emoji', 'image', 'shape'], 'text');
   const imageSource = type === 'image' && /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(element.src || '') && String(element.src).length <= 3000000
     ? String(element.src)
     : '';
@@ -41,7 +41,7 @@ const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : [])
   return {
     id: cleanText(element.id, 50) || `element-${index + 1}`,
     type,
-    content: type === 'image' ? '' : cleanText(element.content, type === 'emoji' ? 12 : 80),
+    content: type === 'image' || type === 'shape' ? '' : cleanText(element.content, type === 'emoji' ? 12 : 80),
     src: imageSource,
     x: clampNumber(element.x, 0, 100, 50),
     y: clampNumber(element.y, 0, 100, 50),
@@ -49,6 +49,9 @@ const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : [])
     rotation: clampNumber(element.rotation, -180, 180, 0),
     opacity: clampNumber(element.opacity, 20, 100, 100),
     color: cleanColor(element.color) || '#ffffff',
+    shape: allowed(element.shape, ['rectangle', 'circle', 'line'], 'rectangle'),
+    fontFamily: allowed(element.fontFamily, ['editorial', 'modern', 'display'], 'editorial'),
+    fontWeight: allowed(Number(element.fontWeight), [400, 700, 900], 700),
   };
 }).filter(Boolean);
 const normalizeDesign = (design) => ({

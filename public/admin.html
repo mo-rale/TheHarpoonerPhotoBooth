@@ -4,479 +4,179 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#02051d">
-  <title>The Harpooner PhotoBooth · Admin</title>
-  <style>
-    :root { --navy:#02051d; --panel:#071033; --panel2:#0b1948; --cyan:#43d9e7; --cream:#f8f6ef; --muted:#aeb8cc; --burgundy:#7f171d; --line:rgba(67,217,231,.16); font-family:"Segoe UI Variable Text","Segoe UI",sans-serif; }
-    * { box-sizing:border-box; }
-    body { min-height:100vh; margin:0; color:var(--cream); background:radial-gradient(circle at 50% 0,#0a2b70,var(--navy) 42%); }
-    button,input,select { font:inherit; }
-    button { cursor:pointer; }
-    .topbar { min-height:76px; padding:.75rem clamp(1rem,4vw,3rem); display:flex; align-items:center; justify-content:space-between; gap:1rem; border-bottom:1px solid var(--line); background:rgba(2,5,29,.78); backdrop-filter:blur(18px); }
-    .brand { display:flex; align-items:center; gap:.75rem; }
-    .brand img { width:48px; height:48px; object-fit:cover; border:2px solid var(--cyan); border-radius:50%; }
-    .brand strong { display:block; font-family:Georgia,serif; }
-    .brand small { color:var(--cyan); font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.16em; }
-    a { color:var(--cyan); text-decoration:none; }
-    main { width:min(1220px,calc(100% - 2rem)); margin:0 auto; padding:2rem 0 4rem; }
-    .page-title { margin-bottom:1.4rem; }
-    .page-title small { color:var(--cyan); font-weight:800; text-transform:uppercase; letter-spacing:.14em; }
-    h1,h2 { margin:.35rem 0 0; font-family:Georgia,serif; }
-    h1 { font-size:clamp(2rem,4vw,3.4rem); }
-    .developer-options { margin-bottom:1rem; padding:.9rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
-    .developer-copy { display:flex; flex-direction:column; gap:.25rem; }
-    .developer-copy small { color:var(--cyan); font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.12em; }
-    .developer-copy strong { font:700 1rem Georgia,serif; }
-    .developer-copy p { margin:0; color:var(--muted); font-size:.72rem; }
-    .switch-control { flex:0 0 auto; display:flex; align-items:center; gap:.65rem; color:var(--muted); font-size:.72rem; font-weight:700; cursor:pointer; }
-    .switch-control input { position:absolute; opacity:0; pointer-events:none; }
-    .switch-track { width:48px; height:26px; padding:3px; display:block; border:1px solid var(--line); border-radius:999px; background:#050c2b; transition:.18s ease; }
-    .switch-track::after { content:""; width:18px; height:18px; display:block; border-radius:50%; background:var(--muted); transition:.18s ease; }
-    .switch-control input:checked + .switch-track { border-color:var(--cyan); background:rgba(67,217,231,.18); }
-    .switch-control input:checked + .switch-track::after { transform:translateX(20px); background:var(--cyan); }
-    .switch-control input:focus-visible + .switch-track { outline:3px solid rgba(67,217,231,.3); outline-offset:3px; }
-    .manager { display:grid; grid-template-columns:260px minmax(420px,1fr) 370px; grid-template-areas:"library preview editor"; gap:1rem; align-items:start; }
-    #designForm { grid-area:editor; position:sticky; top:1rem; max-height:calc(100vh - 2rem); overflow:auto; scrollbar-width:thin; }
-    .design-library { grid-area:library; position:sticky; top:1rem; max-height:calc(100vh - 2rem); overflow:auto; scrollbar-width:thin; }
-    .preview-panel { grid-area:preview; position:sticky; top:1rem; min-height:calc(100vh - 2rem); display:flex; flex-direction:column; }
-    .panel { padding:1rem; border:1px solid var(--line); border-radius:16px; background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015)); }
-    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
-    .panel-head p { margin:.25rem 0 0; color:var(--muted); font-size:.75rem; }
-    .field { display:flex; flex-direction:column; gap:.35rem; margin-bottom:.75rem; }
-    .field>span,.color-field>span { color:var(--muted); font-size:.67rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
-    input[type=text] { width:100%; padding:.75rem; border:1px solid var(--line); border-radius:8px; background:#050c2b; color:var(--cream); }
-    .colors { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
-    .option-group { margin-top:1rem; padding-top:.9rem; border-top:1px solid var(--line); }
-    .option-group h3 { margin:0 0 .65rem; font:700 .75rem "Segoe UI",sans-serif; color:var(--cyan); text-transform:uppercase; letter-spacing:.1em; }
-    .option-grid { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
-    .option-grid select { width:100%; padding:.68rem; border:1px solid var(--line); border-radius:8px; background:#050c2b; color:var(--cream); }
-    .color-field { display:flex; align-items:center; justify-content:space-between; gap:.6rem; padding:.55rem .65rem; border:1px solid var(--line); border-radius:8px; background:#050c2b; }
-    input[type=color] { width:38px; height:30px; padding:0; border:0; border-radius:6px; background:none; }
-    .check { display:flex; align-items:center; gap:.55rem; margin:.8rem 0; color:var(--muted); font-size:.76rem; }
-    .preview-wrap { min-height:680px; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.25rem; margin:0; padding:2rem; border-radius:12px; background:radial-gradient(circle at 50% 42%,#102a69,#030821 68%); }
-    .preview-panel .panel-head { margin-bottom:.75rem; }
-    .preview-panel .preview-copy { text-align:center; }
-    .preview-copy small { color:var(--muted); }
-    .mini-strip { position:relative; width:220px; height:650px; padding:16px; display:flex; flex-direction:column; gap:9px; overflow:hidden; border:5px solid var(--preview-border); border-radius:7px; background:var(--preview-bg); box-shadow:0 30px 70px rgba(0,0,0,.48); touch-action:none; }
-    .mini-strip.checker { background-color:var(--preview-bg); background-image:linear-gradient(45deg,var(--preview-accent) 25%,transparent 25%),linear-gradient(-45deg,var(--preview-accent) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--preview-accent) 75%),linear-gradient(-45deg,transparent 75%,var(--preview-accent) 75%); background-size:24px 24px; background-position:0 0,0 12px,12px -12px,-12px 0; }
-    .mini-strip.stripes { background-color:var(--preview-bg); background-image:repeating-linear-gradient(135deg,transparent 0,transparent 14px,var(--preview-accent) 14px,var(--preview-accent) 26px); }
-    .mini-strip.bw i,.design-swatch.bw i { filter:grayscale(1); }.mini-strip.sepia i,.design-swatch.sepia i { filter:sepia(.8); }.mini-strip.vivid i,.design-swatch.vivid i { filter:saturate(1.6) contrast(1.15); }
-    .mini-strip i { flex:1; border-radius:2px; background:#273253; border:1px solid rgba(255,255,255,.22); }
-    .mini-footer { display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--preview-ink); text-align:center; }
-    .mini-footer img { width:30px; height:30px; border-radius:50%; object-fit:cover; }
-    .mini-footer b { font:700 .65rem Georgia,serif; }
-    .mini-footer small,.mini-footer time { max-width:100%; overflow:hidden; color:inherit; font-size:.36rem; white-space:nowrap; text-overflow:ellipsis; }
-    .element-tools { display:grid; grid-template-columns:1fr 1fr; gap:.45rem; }
-    .element-tools button,.upload-element { min-height:42px; display:grid; place-items:center; padding:.55rem; border:1px solid var(--line); border-radius:8px; background:#050c2b; color:var(--cream); font-size:.72rem; font-weight:700; cursor:pointer; }
-    .sticker-palette { display:grid; grid-template-columns:repeat(6,1fr); gap:.35rem; margin-top:.55rem; }
-    .sticker-palette button { padding:.45rem .2rem; border:1px solid var(--line); border-radius:7px; background:#050c2b; font-size:1.05rem; }
-    .layer-list { display:flex; flex-direction:column; gap:.35rem; margin:.7rem 0; }
-    .layer-row { width:100%; padding:.5rem .6rem; display:flex; justify-content:space-between; gap:.5rem; border:1px solid var(--line); border-radius:7px; background:#050c2b; color:var(--muted); text-align:left; font-size:.68rem; }
-    .layer-row.active { border-color:var(--cyan); color:var(--cyan); }
-    .element-empty { margin:.65rem 0; color:var(--muted); font-size:.68rem; }
-    .element-editor { padding:.65rem; border:1px solid var(--line); border-radius:9px; background:rgba(67,217,231,.04); }
-    .element-editor[hidden] { display:none; }
-    .element-editor input[type=range] { width:100%; accent-color:var(--cyan); }
-    .element-controls { display:grid; grid-template-columns:1fr 1fr; gap:.45rem; }
-    .element-controls .danger { grid-column:1/-1; }
-    .element-overlay { position:absolute; inset:0; z-index:5; pointer-events:none; }
-    .canvas-element { position:absolute; min-width:20px; padding:2px; border:1px solid transparent; background:transparent; color:inherit; line-height:1; white-space:nowrap; transform-origin:center; pointer-events:auto; cursor:move; user-select:none; touch-action:none; }
-    .canvas-element.selected { border-color:var(--cyan); outline:1px dashed rgba(255,255,255,.85); outline-offset:2px; }
-    .canvas-element img { width:100%; height:auto; display:block; pointer-events:none; }
-    .actions { display:grid; grid-template-columns:1fr 1fr; gap:.55rem; }
-    .primary,.secondary,.danger { padding:.72rem .85rem; border-radius:8px; font-weight:800; }
-    .primary { border:0; background:var(--cyan); color:#02051d; }
-    .secondary { border:1px solid var(--line); background:#0b1948; color:var(--cream); }
-    .danger { border:1px solid #b94b50; background:var(--burgundy); color:white; }
-    #status { min-height:1.2rem; margin:.65rem 0 0; color:var(--cyan); font-size:.72rem; }
-    .design-grid { display:grid; grid-template-columns:1fr; gap:.7rem; }
-    .collection-tabs { display:flex; gap:.4rem; margin-bottom:.8rem; padding-bottom:.7rem; overflow-x:auto; border-bottom:1px solid var(--line); scrollbar-width:thin; }
-    .collection-tab { flex:0 0 auto; padding:.5rem .7rem; border:1px solid var(--line); border-radius:999px; background:#050c2b; color:var(--muted); font-size:.66rem; font-weight:700; }
-    .collection-tab.active { border-color:var(--cyan); background:rgba(67,217,231,.12); color:var(--cyan); }
-    .category-badge { width:max-content; margin-bottom:.25rem; padding:.2rem .4rem; border-radius:999px; background:rgba(67,217,231,.1); color:var(--cyan); font-size:.52rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
-    .design-card { padding:.65rem; display:grid; grid-template-columns:72px 1fr; grid-template-rows:auto auto auto 1fr; column-gap:.7rem; border:1px solid var(--line); border-radius:11px; background:rgba(255,255,255,.025); }
-    .design-swatch { grid-row:1/5; width:72px; height:116px; padding:6px; display:flex; flex-direction:column; gap:3px; border:2px solid var(--border); border-radius:7px; background:var(--bg); }
-    .design-swatch.checker { background-color:var(--bg); background-image:linear-gradient(45deg,var(--accent) 25%,transparent 25%),linear-gradient(-45deg,var(--accent) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--accent) 75%),linear-gradient(-45deg,transparent 75%,var(--accent) 75%); background-size:22px 22px; background-position:0 0,0 11px,11px -11px,-11px 0; }
-    .design-swatch.stripes { background-color:var(--bg); background-image:repeating-linear-gradient(135deg,transparent 0,transparent 13px,var(--accent) 13px,var(--accent) 24px); }
-    .design-swatch i { flex:1; border-radius:2px; background:#273253; border:1px solid rgba(255,255,255,.2); }
-    .design-swatch b { color:var(--ink); font:700 .55rem Georgia,serif; text-align:center; }
-    .design-card h3 { margin:.05rem 0 .15rem; font-size:.8rem; }
-    .design-card p { margin:0 0 .5rem; color:var(--muted); font-size:.63rem; }
-    .card-actions { display:grid; grid-template-columns:1fr 1fr; gap:.4rem; }
-    .card-actions button { padding:.5rem; font-size:.68rem; }
-    .gallery-section { margin-top:2rem; }
-    .photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; margin-top:1rem; }
-    figure { margin:0; padding:.6rem; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
-    figure img { width:100%; display:block; border-radius:5px; }
-    .photo-open { width:100%; padding:0; border:0; border-radius:5px; overflow:hidden; background:none; }
-    .photo-open:hover img { filter:brightness(1.08); transform:scale(1.01); }
-    .photo-open img { transition:.18s ease; }
-    figcaption { display:flex; justify-content:space-between; align-items:center; gap:.5rem; margin-top:.5rem; font-size:.68rem; }
-    figcaption button { padding:.35rem .55rem; border:1px solid #b94b50; border-radius:6px; background:var(--burgundy); color:white; }
-    .photo-preview { width:min(92vw,720px); max-height:92vh; padding:0; overflow:hidden; border:1px solid var(--line); border-radius:16px; color:var(--cream); background:#030821; box-shadow:0 30px 100px rgba(0,0,0,.75); }
-    .photo-preview::backdrop { background:rgba(0,2,14,.82); backdrop-filter:blur(8px); }
-    .photo-preview-head { padding:.8rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; border-bottom:1px solid var(--line); }
-    .photo-preview-head strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .photo-preview-close { padding:.55rem .8rem; border:1px solid var(--line); border-radius:8px; background:#0b1948; color:var(--cream); }
-    .photo-preview-body { max-height:calc(92vh - 68px); padding:1rem; overflow:auto; display:grid; place-items:center; }
-    .photo-preview-body img { display:block; max-width:100%; max-height:calc(92vh - 100px); border-radius:8px; }
-    @media(max-width:1150px){.manager{grid-template-columns:240px 1fr;grid-template-areas:"library preview" "editor editor"}.preview-panel{min-height:650px}.preview-wrap{min-height:560px}.mini-strip{height:520px;width:178px}#designForm{position:static;max-height:none}.design-library{position:sticky}}
-    @media(max-width:760px){.manager{grid-template-columns:1fr;grid-template-areas:"preview" "library" "editor"}.preview-panel,.design-library{position:static;max-height:none}.preview-wrap{min-height:520px}.design-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:540px){.topbar{align-items:flex-start;flex-direction:column}.developer-options{align-items:flex-start;flex-direction:column}.design-grid{grid-template-columns:1fr}.colors,.option-grid{grid-template-columns:1fr}.mini-strip{height:470px;width:160px}}
-  </style>
+  <title>The Harpooner PhotoBooth · Design Studio</title>
+  <link rel="stylesheet" href="admin.css?v=20261001-1">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="harpooner-logo.jpg" alt=""><span><strong>The Harpooner PhotoBooth</strong><small>Admin workspace</small></span></div>
-    <a href="index.html">← Back to booth</a>
+    <a class="brand" href="index.html" aria-label="Back to booth"><img src="harpooner-logo.jpg" alt=""><span><strong>The Harpooner</strong><small>PhotoBooth Studio</small></span></a>
+    <div class="top-actions">
+      <button id="undoBtn" class="icon-button" type="button" title="Undo (Ctrl+Z)" disabled>↶</button>
+      <button id="redoBtn" class="icon-button" type="button" title="Redo (Ctrl+Y)" disabled>↷</button>
+      <span class="top-divider"></span>
+      <button id="newDesign" class="secondary" type="button">New design</button>
+      <button class="primary" type="submit" form="designForm">Save design</button>
+      <a class="booth-link" href="index.html">Open booth ↗</a>
+    </div>
   </header>
 
-  <main>
-    <div class="page-title"><small>Local administration</small><h1>Design studio</h1></div>
-    <section class="developer-options panel" aria-labelledby="developerOptionsTitle">
-      <div class="developer-copy"><small>Developer options</small><strong id="developerOptionsTitle">Camera-free preview</strong><p>Show a guest-side button that opens the booth with simulated photos for layout testing.</p></div>
-      <label class="switch-control"><span>Show preview button</span><input id="developerPreviewToggle" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
+  <main class="studio-shell">
+    <section class="studio-heading">
+      <div><small>STAFF WORKSPACE</small><h1>Design studio</h1><p>Create photo-strip designs with reusable brand styles, layers, and event assets.</p></div>
+      <div class="document-state"><span id="saveState">Unsaved design</span><strong id="documentTitle">Untitled</strong></div>
     </section>
-    <section class="manager">
-      <form id="designForm" class="panel">
-        <div class="panel-head"><div><h2 id="formTitle">New design</h2><p>Create a reusable photo-strip finish.</p></div><button id="newDesign" class="secondary" type="button">New</button></div>
-        <label class="field"><span>Design name</span><input id="designName" name="name" type="text" maxlength="40" required placeholder="Campus Blue"></label>
-        <label class="field"><span>Short description</span><input id="designNote" name="note" type="text" maxlength="80" placeholder="Bold and official"></label>
-        <label class="field"><span>Event tab</span><input id="designCategory" name="category" type="text" maxlength="30" list="categoryOptions" value="General" placeholder="Valentines"><small>Type a new name to create a new tab.</small></label>
-        <datalist id="categoryOptions"></datalist>
-        <div class="colors">
-          <label class="color-field"><span>Background</span><input id="designBg" name="bg" type="color" value="#43d9e7"></label>
-          <label class="color-field"><span>Text</span><input id="designInk" name="ink" type="color" value="#030522"></label>
-          <label class="color-field"><span>Accent</span><input id="designAccent" name="accent" type="color" value="#b9f5f6"></label>
-          <label class="color-field"><span>Border</span><input id="designBorder" name="border" type="color" value="#f1ffff"></label>
+
+    <section class="studio-layout">
+      <aside class="left-sidebar panel">
+        <div class="sidebar-tabs" role="tablist" aria-label="Studio tools">
+          <button class="sidebar-tab active" type="button" data-pane="templates">Templates</button>
+          <button class="sidebar-tab" type="button" data-pane="elements">Elements</button>
+          <button class="sidebar-tab" type="button" data-pane="layers">Layers</button>
         </div>
-        <div class="option-group">
-          <h3>Visual style</h3>
-          <div class="option-grid">
-            <label class="field"><span>Background pattern</span><select id="designPattern"><option value="solid">Solid</option><option value="checker">Checkerboard</option><option value="stripes">Diagonal stripes</option></select></label>
-            <label class="field"><span>Photo effect</span><select id="designEffect"><option value="original">Original</option><option value="bw">Black &amp; white</option><option value="sepia">Warm sepia</option><option value="vivid">Vivid color</option></select></label>
-            <label class="field"><span>Typography</span><select id="designFont"><option value="editorial">Editorial serif</option><option value="modern">Modern sans-serif</option></select></label>
-            <label class="field"><span>Outer margin</span><select id="designPadding"><option value="44">Compact</option><option value="64" selected>Balanced</option><option value="88">Airy</option></select></label>
-          </div>
+
+        <div id="templatesPane" class="tool-pane active">
+          <div class="pane-heading"><div><small>DESIGN LIBRARY</small><strong>Templates</strong></div><b id="designCount">0</b></div>
+          <div id="designTabs" class="collection-tabs"></div>
+          <div id="designGrid" class="design-grid"></div>
         </div>
-        <div class="option-group">
-          <h3>Strip layout</h3>
-          <div class="option-grid">
-            <label class="field"><span>Photo spacing</span><select id="designGap"><option value="14">Tight</option><option value="26" selected>Standard</option><option value="42">Wide</option></select></label>
-            <label class="field"><span>Photo border</span><select id="designBorderWidth"><option value="0">None</option><option value="5" selected>Fine</option><option value="10">Bold</option></select></label>
-            <label class="field"><span>Footer size</span><select id="designFooter"><option value="190">Compact</option><option value="230" selected>Standard</option><option value="300">Large</option></select></label>
+
+        <div id="elementsPane" class="tool-pane">
+          <div class="pane-heading"><div><small>ADD TO CANVAS</small><strong>Text</strong></div></div>
+          <div class="preset-stack">
+            <button type="button" data-text-preset="heading"><b>Add a heading</b><small>Bold display text</small></button>
+            <button type="button" data-text-preset="subheading"><b>Add a subheading</b><small>Medium emphasis</small></button>
+            <button type="button" data-text-preset="body"><b>Add body text</b><small>Small supporting copy</small></button>
           </div>
-          <label class="field"><span>Custom tagline</span><input id="designTagline" type="text" maxlength="70" value="THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS"></label>
-          <label class="check"><input id="designShowLogo" type="checkbox" checked> Show the Harpooner logo</label>
-          <label class="check"><input id="designShowDate" type="checkbox" checked> Show the session date</label>
-        </div>
-        <div class="option-group">
-          <h3>Stickers &amp; elements</h3>
-          <div class="element-tools">
-            <button id="addTextElement" type="button">＋ Add text</button>
-            <label class="upload-element">↑ Upload image<input id="elementUpload" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+          <div class="pane-heading compact"><div><small>GRAPHICS</small><strong>Shapes</strong></div></div>
+          <div class="shape-grid">
+            <button type="button" data-shape="rectangle" title="Rectangle"><span class="shape rectangle"></span></button>
+            <button type="button" data-shape="circle" title="Circle"><span class="shape circle"></span></button>
+            <button type="button" data-shape="line" title="Line"><span class="shape line"></span></button>
           </div>
+          <div class="pane-heading compact"><div><small>QUICK ASSETS</small><strong>Stickers</strong></div></div>
           <div class="sticker-palette" aria-label="Quick stickers">
-            <button type="button" data-sticker="❤" title="Heart">❤</button><button type="button" data-sticker="✨" title="Sparkles">✨</button><button type="button" data-sticker="★" title="Star">★</button><button type="button" data-sticker="🎉" title="Party">🎉</button><button type="button" data-sticker="🎓" title="Graduation">🎓</button><button type="button" data-sticker="🌹" title="Rose">🌹</button>
+            <button type="button" data-sticker="❤">❤</button><button type="button" data-sticker="✨">✨</button><button type="button" data-sticker="★">★</button><button type="button" data-sticker="🎉">🎉</button><button type="button" data-sticker="🎓">🎓</button><button type="button" data-sticker="🌹">🌹</button><button type="button" data-sticker="⚓">⚓</button><button type="button" data-sticker="📸">📸</button>
           </div>
+          <label class="upload-card">↑ Upload image<input id="elementUpload" type="file" accept="image/png,image/jpeg,image/webp" hidden><small>PNG, JPG, or WebP · up to 2 MB</small></label>
+        </div>
+
+        <div id="layersPane" class="tool-pane">
+          <div class="pane-heading"><div><small>CANVAS ORDER</small><strong>Layers</strong></div><b id="layerCount">0</b></div>
           <div id="elementLayers" class="layer-list"></div>
-          <p id="elementEmpty" class="element-empty">Add text, stickers, or an image. Drag elements directly on the large preview.</p>
-          <div id="elementEditor" class="element-editor" hidden>
-            <label id="elementContentField" class="field"><span>Text or sticker</span><input id="elementContent" type="text" maxlength="80"></label>
-            <label class="color-field"><span>Element color</span><input id="elementColor" type="color" value="#ffffff"></label>
-            <label class="field"><span>Size</span><input id="elementSize" type="range" min="4" max="45" value="14"></label>
-            <label class="field"><span>Rotation</span><input id="elementRotation" type="range" min="-180" max="180" value="0"></label>
-            <label class="field"><span>Opacity</span><input id="elementOpacity" type="range" min="20" max="100" value="100"></label>
-            <div class="element-controls"><button id="elementBack" class="secondary" type="button">Send back</button><button id="elementForward" class="secondary" type="button">Bring forward</button><button id="elementDuplicate" class="secondary" type="button">Duplicate</button><button id="elementRemove" class="danger" type="button">Remove element</button></div>
+          <p id="elementEmpty" class="empty-state">Add text, stickers, shapes, or an image to start building layers.</p>
+        </div>
+      </aside>
+
+      <section class="canvas-panel panel">
+        <div class="canvas-toolbar">
+          <div><small>LIVE CANVAS</small><strong id="canvasLabel">Untitled design</strong></div>
+          <div class="canvas-controls">
+            <button id="toggleGrid" class="tool-button" type="button" aria-pressed="false"># Grid</button>
+            <button id="zoomOut" class="icon-button" type="button" aria-label="Zoom out">−</button>
+            <span id="zoomValue">100%</span>
+            <button id="zoomIn" class="icon-button" type="button" aria-label="Zoom in">＋</button>
+            <button id="zoomFit" class="tool-button" type="button">Fit</button>
           </div>
         </div>
-        <div class="actions"><button class="primary" type="submit">Save design</button><button id="cancelEdit" class="secondary" type="button">Reset</button></div>
-        <p id="status" role="status"></p>
+        <div id="canvasViewport" class="canvas-viewport">
+          <div id="canvasStage" class="canvas-stage">
+            <div id="designPreview" class="mini-strip">
+              <i></i><i></i><i></i><i></i>
+              <div class="mini-footer"><img id="previewLogo" src="harpooner-logo.jpg" alt=""><b>THE HARPOONER</b><small id="previewTagline">THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS</small><time id="previewDate">TODAY</time></div>
+              <div class="canvas-guides" aria-hidden="true"></div>
+              <div id="elementOverlay" class="element-overlay"></div>
+            </div>
+          </div>
+        </div>
+        <div class="canvas-footer"><span>Drag elements to position them. Use arrow keys to nudge.</span><span id="selectionStatus">Nothing selected</span></div>
+      </section>
+
+      <form id="designForm" class="right-sidebar panel">
+        <div class="inspector-head"><div><small>DESIGN</small><h2 id="formTitle">New design</h2></div><span id="status" role="status"></span></div>
+
+        <details open>
+          <summary>Document</summary>
+          <div class="inspector-section">
+            <label class="field"><span>Design name</span><input id="designName" name="name" type="text" maxlength="40" required placeholder="Campus Blue"></label>
+            <label class="field"><span>Description</span><input id="designNote" name="note" type="text" maxlength="80" placeholder="Bold and official"></label>
+            <label class="field"><span>Event tab</span><input id="designCategory" name="category" type="text" maxlength="30" list="categoryOptions" value="General" placeholder="Valentines"><small>New names create new tabs.</small></label>
+            <datalist id="categoryOptions"></datalist>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Brand &amp; background</summary>
+          <div class="inspector-section">
+            <div class="colors">
+              <label class="color-field"><span>Background</span><input id="designBg" type="color" value="#43d9e7"></label>
+              <label class="color-field"><span>Text</span><input id="designInk" type="color" value="#030522"></label>
+              <label class="color-field"><span>Accent</span><input id="designAccent" type="color" value="#b9f5f6"></label>
+              <label class="color-field"><span>Border</span><input id="designBorder" type="color" value="#f1ffff"></label>
+            </div>
+            <div class="two-fields">
+              <label class="field"><span>Pattern</span><select id="designPattern"><option value="solid">Solid</option><option value="checker">Checkerboard</option><option value="stripes">Diagonal stripes</option></select></label>
+              <label class="field"><span>Photo effect</span><select id="designEffect"><option value="original">Original</option><option value="bw">Black &amp; white</option><option value="sepia">Warm sepia</option><option value="vivid">Vivid</option></select></label>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Strip layout</summary>
+          <div class="inspector-section">
+            <div class="two-fields">
+              <label class="field"><span>Typography</span><select id="designFont"><option value="editorial">Editorial serif</option><option value="modern">Modern sans</option></select></label>
+              <label class="field"><span>Outer margin</span><select id="designPadding"><option value="44">Compact</option><option value="64" selected>Balanced</option><option value="88">Airy</option></select></label>
+              <label class="field"><span>Photo spacing</span><select id="designGap"><option value="14">Tight</option><option value="26" selected>Standard</option><option value="42">Wide</option></select></label>
+              <label class="field"><span>Photo border</span><select id="designBorderWidth"><option value="0">None</option><option value="5" selected>Fine</option><option value="10">Bold</option></select></label>
+              <label class="field"><span>Footer size</span><select id="designFooter"><option value="190">Compact</option><option value="230" selected>Standard</option><option value="300">Large</option></select></label>
+            </div>
+            <label class="field"><span>Custom tagline</span><input id="designTagline" type="text" maxlength="70" value="THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS"></label>
+            <label class="check"><input id="designShowLogo" type="checkbox" checked> Show logo</label>
+            <label class="check"><input id="designShowDate" type="checkbox" checked> Show session date</label>
+          </div>
+        </details>
+
+        <details id="elementInspector" open hidden>
+          <summary>Selected element</summary>
+          <div class="inspector-section">
+            <label id="elementContentField" class="field"><span>Text or sticker</span><input id="elementContent" type="text" maxlength="80"></label>
+            <div id="textStyleFields" class="two-fields">
+              <label class="field"><span>Typeface</span><select id="elementFont"><option value="editorial">Editorial</option><option value="modern">Modern</option><option value="display">Display</option></select></label>
+              <label class="field"><span>Weight</span><select id="elementWeight"><option value="400">Regular</option><option value="700">Bold</option><option value="900">Heavy</option></select></label>
+            </div>
+            <label id="shapeField" class="field" hidden><span>Shape</span><select id="elementShape"><option value="rectangle">Rectangle</option><option value="circle">Circle</option><option value="line">Line</option></select></label>
+            <label class="color-field"><span>Element color</span><input id="elementColor" type="color" value="#ffffff"></label>
+            <div class="two-fields position-fields">
+              <label class="field"><span>X position</span><input id="elementX" type="number" min="0" max="100" step="1"></label>
+              <label class="field"><span>Y position</span><input id="elementY" type="number" min="0" max="100" step="1"></label>
+            </div>
+            <label class="range-field"><span>Size <output id="elementSizeValue">14</output></span><input id="elementSize" type="range" min="4" max="60" value="14"></label>
+            <label class="range-field"><span>Rotation <output id="elementRotationValue">0°</output></span><input id="elementRotation" type="range" min="-180" max="180" value="0"></label>
+            <label class="range-field"><span>Opacity <output id="elementOpacityValue">100%</output></span><input id="elementOpacity" type="range" min="10" max="100" value="100"></label>
+            <div class="align-grid" aria-label="Align element">
+              <button type="button" data-align="left">← Left</button><button type="button" data-align="center">↔ Center</button><button type="button" data-align="right">Right →</button>
+              <button type="button" data-align="top">↑ Top</button><button type="button" data-align="middle">↕ Middle</button><button type="button" data-align="bottom">Bottom ↓</button>
+            </div>
+            <div class="element-controls"><button id="elementBack" class="secondary" type="button">Send back</button><button id="elementForward" class="secondary" type="button">Bring forward</button><button id="elementDuplicate" class="secondary" type="button">Duplicate</button><button id="elementRemove" class="danger" type="button">Delete</button></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Developer options</summary>
+          <div class="inspector-section"><label class="switch-row"><span><b>Camera-free preview</b><small>Show simulated-camera entry on the guest screen.</small></span><input id="developerPreviewToggle" type="checkbox" role="switch"></label></div>
+        </details>
+
+        <div class="form-actions"><button class="primary" type="submit">Save design</button><button id="cancelEdit" class="secondary" type="button">Reset changes</button></div>
       </form>
-
-      <section class="preview-panel panel">
-        <div class="panel-head"><div><h2>Live preview</h2><p>Changes update instantly as you design.</p></div><strong>Canvas</strong></div>
-        <div class="preview-wrap"><div id="designPreview" class="mini-strip"><i></i><i></i><i></i><i></i><div class="mini-footer"><img id="previewLogo" src="harpooner-logo.jpg" alt=""><b>THE HARPOONER</b><small id="previewTagline">THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS</small><time id="previewDate">TODAY</time></div><div id="elementOverlay" class="element-overlay"></div></div><div class="preview-copy"><strong id="previewName">Untitled design</strong><br><small id="previewNote">Create a strip using the controls on the right.</small></div></div>
-      </section>
-
-      <section class="design-library panel">
-        <div class="panel-head"><div><h2>Available designs</h2><p>These appear on the final screen after every session.</p></div><strong id="designCount">0</strong></div>
-        <div id="designTabs" class="collection-tabs"></div>
-        <div id="designGrid" class="design-grid"></div>
-      </section>
     </section>
 
     <section class="gallery-section panel">
-      <div class="panel-head"><div><h2>Saved photo strips</h2><p>Recent sessions stored on this computer.</p></div><strong id="photoCount">0</strong></div>
+      <div class="section-heading"><div><small>LOCAL ARCHIVE</small><h2>Saved photo strips</h2><p>Recent sessions stored on this computer.</p></div><strong id="photoCount">0</strong></div>
       <div class="photo-grid" id="photoGrid"></div>
     </section>
   </main>
 
-  <dialog id="photoPreview" class="photo-preview">
-    <div class="photo-preview-head"><strong id="photoPreviewName">Saved photo strip</strong><button id="photoPreviewClose" class="photo-preview-close" type="button">Close ×</button></div>
-    <div class="photo-preview-body"><img id="photoPreviewImage" alt="Saved photo strip preview"></div>
-  </dialog>
-
-  <script>
-    const $ = (id) => document.getElementById(id);
-    let designs = [];
-    let editingId = null;
-    let activeDesignTab = 'all';
-    let designElements = [];
-    let selectedElementId = null;
-    const DEVELOPER_PREVIEW_KEY = 'harpoonerDeveloperPreview';
-
-    $('developerPreviewToggle').checked = localStorage.getItem(DEVELOPER_PREVIEW_KEY) === 'true';
-    $('developerPreviewToggle').addEventListener('change', (event) => {
-      localStorage.setItem(DEVELOPER_PREVIEW_KEY, String(event.target.checked));
-    });
-
-    const cloneElements = (elements) => JSON.parse(JSON.stringify(Array.isArray(elements) ? elements : []));
-    const selectedElement = () => designElements.find((element) => element.id === selectedElementId);
-    const makeElementId = () => `element-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-
-    function formData() {
-      return { name: $('designName').value, note: $('designNote').value, category: $('designCategory').value.trim() || 'General', bg: $('designBg').value, ink: $('designInk').value, accent: $('designAccent').value, border: $('designBorder').value, pattern: $('designPattern').value, photoEffect: $('designEffect').value, fontStyle: $('designFont').value, padding: Number($('designPadding').value), gap: Number($('designGap').value), borderWidth: Number($('designBorderWidth').value), footerHeight: Number($('designFooter').value), tagline: $('designTagline').value, showLogo: $('designShowLogo').checked, showDate: $('designShowDate').checked, elements: cloneElements(designElements) };
-    }
-
-    function renderCanvasElements() {
-      const overlay = $('elementOverlay');
-      overlay.replaceChildren();
-      designElements.forEach((element) => {
-        const node = document.createElement('button');
-        node.type = 'button';
-        node.className = `canvas-element ${element.id === selectedElementId ? 'selected' : ''}`;
-        node.style.left = `${element.x}%`;
-        node.style.top = `${element.y}%`;
-        node.style.color = element.color || '#ffffff';
-        node.style.opacity = String((element.opacity ?? 100) / 100);
-        node.style.transform = `translate(-50%,-50%) rotate(${element.rotation || 0}deg)`;
-        node.setAttribute('aria-label', `Move ${element.type} element`);
-        if (element.type === 'image') {
-          node.style.width = `${element.size}%`;
-          const image = document.createElement('img'); image.src = element.src; image.alt = '';
-          node.appendChild(image);
-        } else {
-          node.style.fontSize = `${Math.max(10, element.size * 2.2)}px`;
-          node.textContent = element.content || (element.type === 'emoji' ? '★' : 'Your text');
-        }
-        node.addEventListener('click', () => selectElement(element.id));
-        node.addEventListener('pointerdown', (event) => {
-          event.preventDefault(); selectedElementId = element.id; node.classList.add('selected'); node.setPointerCapture(event.pointerId);
-          const move = (moveEvent) => {
-            const bounds = $('designPreview').getBoundingClientRect();
-            element.x = Math.max(0, Math.min(100, Math.round(((moveEvent.clientX - bounds.left) / bounds.width) * 100)));
-            element.y = Math.max(0, Math.min(100, Math.round(((moveEvent.clientY - bounds.top) / bounds.height) * 100)));
-            node.style.left = `${element.x}%`; node.style.top = `${element.y}%`;
-          };
-          node.addEventListener('pointermove', move);
-          node.addEventListener('pointerup', () => { node.removeEventListener('pointermove', move); renderElementStudio(); }, { once:true });
-        });
-        overlay.appendChild(node);
-      });
-    }
-
-    function renderElementStudio() {
-      const layers = $('elementLayers');
-      layers.replaceChildren();
-      [...designElements].reverse().forEach((element, reverseIndex) => {
-        const row = document.createElement('button'); row.type = 'button';
-        row.className = `layer-row ${element.id === selectedElementId ? 'active' : ''}`;
-        const layerNumber = designElements.length - reverseIndex;
-        row.innerHTML = `<span></span><small>Layer ${layerNumber}</small>`;
-        row.querySelector('span').textContent = element.type === 'image' ? '▧ Uploaded image' : `${element.type === 'emoji' ? 'Sticker' : 'Text'} · ${element.content || 'Untitled'}`;
-        row.addEventListener('click', () => selectElement(element.id));
-        layers.appendChild(row);
-      });
-      $('elementEmpty').hidden = designElements.length > 0;
-      const element = selectedElement();
-      $('elementEditor').hidden = !element;
-      if (element) {
-        $('elementContentField').hidden = element.type === 'image';
-        $('elementContent').value = element.content || '';
-        $('elementColor').value = element.color || '#ffffff';
-        $('elementSize').value = String(element.size ?? 14);
-        $('elementRotation').value = String(element.rotation || 0);
-        $('elementOpacity').value = String(element.opacity ?? 100);
-      }
-      renderCanvasElements();
-    }
-
-    function selectElement(id) {
-      selectedElementId = id;
-      renderElementStudio();
-    }
-
-    function addElement(type, value) {
-      if (designElements.length >= 24) { $('status').textContent = 'A design can contain up to 24 elements.'; return; }
-      const element = { id:makeElementId(), type, content:type === 'image' ? '' : value, src:type === 'image' ? value : '', x:50, y:22 + (designElements.length % 6) * 9, size:type === 'text' ? 10 : 14, rotation:0, opacity:100, color:'#ffffff' };
-      designElements.push(element); selectedElementId = element.id; $('status').textContent = '';
-      renderElementStudio();
-    }
-
-    function updateSelectedElement() {
-      const element = selectedElement(); if (!element) return;
-      if (element.type !== 'image') element.content = $('elementContent').value;
-      element.color = $('elementColor').value;
-      element.size = Number($('elementSize').value);
-      element.rotation = Number($('elementRotation').value);
-      element.opacity = Number($('elementOpacity').value);
-      renderElementStudio();
-    }
-
-    function updatePreview() {
-      const design = formData();
-      const preview = $('designPreview');
-      preview.style.setProperty('--preview-bg', design.bg);
-      preview.style.setProperty('--preview-ink', design.ink);
-      preview.style.setProperty('--preview-accent', design.accent);
-      preview.style.setProperty('--preview-border', design.border);
-      preview.className = `mini-strip ${design.pattern} ${design.photoEffect}`;
-      preview.style.padding = `${Math.max(8, design.padding / 4)}px`;
-      preview.style.gap = `${Math.max(4, design.gap / 3)}px`;
-      preview.style.borderWidth = `${Math.min(10, Math.max(0, design.borderWidth))}px`;
-      preview.style.fontFamily = design.fontStyle === 'modern' ? 'Segoe UI, sans-serif' : 'Georgia, serif';
-      $('previewName').textContent = design.name || 'Untitled design';
-      $('previewNote').textContent = design.note || 'Create a strip using the controls on the right.';
-      $('previewTagline').textContent = design.tagline || 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS';
-      $('previewLogo').hidden = !design.showLogo;
-      $('previewDate').hidden = !design.showDate;
-      $('previewDate').textContent = new Date().toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }).toUpperCase();
-      renderCanvasElements();
-    }
-
-    function resetForm() {
-      editingId = null;
-      $('formTitle').textContent = 'New design';
-      $('designForm').reset();
-      $('designCategory').value = activeDesignTab === 'all' ? 'General' : activeDesignTab;
-      $('designBg').value = '#43d9e7'; $('designInk').value = '#030522'; $('designAccent').value = '#b9f5f6'; $('designBorder').value = '#f1ffff';
-      $('designPattern').value = 'solid'; $('designEffect').value = 'original'; $('designFont').value = 'editorial'; $('designPadding').value = '64'; $('designGap').value = '26'; $('designBorderWidth').value = '5'; $('designFooter').value = '230';
-      $('designTagline').value = 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = true; $('designShowDate').checked = true;
-      designElements = []; selectedElementId = null; renderElementStudio();
-      $('status').textContent = '';
-      updatePreview();
-    }
-
-    function editDesign(design) {
-      editingId = design.id;
-      $('formTitle').textContent = `Edit ${design.name}`;
-      $('designName').value = design.name; $('designNote').value = design.note || '';
-      $('designCategory').value = design.category || 'General';
-      $('designBg').value = design.bg; $('designInk').value = design.ink; $('designAccent').value = design.accent; $('designBorder').value = design.border;
-      $('designPattern').value = design.pattern || (design.checker ? 'checker' : 'solid'); $('designEffect').value = design.photoEffect || 'original'; $('designFont').value = design.fontStyle || 'editorial';
-      $('designPadding').value = String(design.padding || 64); $('designGap').value = String(design.gap || 26); $('designBorderWidth').value = String(design.borderWidth ?? 5); $('designFooter').value = String(design.footerHeight || 230);
-      $('designTagline').value = design.tagline || 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = design.showLogo !== false; $('designShowDate').checked = design.showDate !== false;
-      designElements = cloneElements(design.elements); selectedElementId = designElements.at(-1)?.id || null; renderElementStudio();
-      updatePreview();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function renderDesigns() {
-      const grid = $('designGrid');
-      grid.replaceChildren();
-      $('designCount').textContent = designs.length;
-      const categories = [...new Set(designs.map((design) => design.category || 'General'))].sort((a, b) => a.localeCompare(b));
-      if (activeDesignTab !== 'all' && !categories.includes(activeDesignTab)) activeDesignTab = 'all';
-      const tabs = $('designTabs');
-      tabs.replaceChildren();
-      ['all', ...categories].forEach((category) => {
-        const button = document.createElement('button');
-        button.type = 'button'; button.className = `collection-tab ${activeDesignTab === category ? 'active' : ''}`;
-        button.textContent = category === 'all' ? 'All designs' : category;
-        button.addEventListener('click', () => { activeDesignTab = category; renderDesigns(); });
-        tabs.appendChild(button);
-      });
-      const categoryOptions = $('categoryOptions');
-      categoryOptions.replaceChildren(...categories.map((category) => { const option = document.createElement('option'); option.value = category; return option; }));
-      const visibleDesigns = activeDesignTab === 'all' ? designs : designs.filter((design) => (design.category || 'General') === activeDesignTab);
-      visibleDesigns.forEach((design) => {
-        const card = document.createElement('article');
-        card.className = 'design-card';
-        card.innerHTML = '<div class="design-swatch"><i></i><i></i><i></i><i></i><b>THE HARPOONER</b></div><span class="category-badge"></span><h3></h3><p></p><div class="card-actions"><button class="secondary edit" type="button">Edit</button><button class="danger delete" type="button">Delete</button></div>';
-        const swatch = card.querySelector('.design-swatch');
-        swatch.style.setProperty('--bg', design.bg); swatch.style.setProperty('--ink', design.ink); swatch.style.setProperty('--accent', design.accent); swatch.style.setProperty('--border', design.border);
-        swatch.classList.add(design.pattern || (design.checker ? 'checker' : 'solid'));
-        swatch.classList.add(design.photoEffect || 'original');
-        card.querySelector('h3').textContent = design.name;
-        card.querySelector('.category-badge').textContent = design.category || 'General';
-        card.querySelector('p').textContent = design.note || 'Custom strip design';
-        card.querySelector('.edit').addEventListener('click', () => editDesign(design));
-        card.querySelector('.delete').addEventListener('click', () => deleteDesign(design));
-        grid.appendChild(card);
-      });
-    }
-
-    async function loadDesigns() {
-      const response = await fetch('/api/designs', { cache: 'no-store' });
-      designs = await response.json();
-      renderDesigns();
-    }
-
-    async function deleteDesign(design) {
-      if (!confirm(`Delete “${design.name}”?`)) return;
-      const response = await fetch(`/api/designs/${encodeURIComponent(design.id)}`, { method: 'DELETE' });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) { $('status').textContent = result.error || 'Could not delete design.'; return; }
-      if (editingId === design.id) resetForm();
-      await loadDesigns();
-    }
-
-    $('designForm').addEventListener('input', updatePreview);
-    $('addTextElement').addEventListener('click', () => addElement('text', 'Your text'));
-    document.querySelectorAll('[data-sticker]').forEach((button) => button.addEventListener('click', () => addElement('emoji', button.dataset.sticker)));
-    $('elementUpload').addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 2000000) { $('status').textContent = 'Use a PNG, JPG, or WebP image smaller than 2 MB.'; event.target.value = ''; return; }
-      const reader = new FileReader();
-      reader.onload = () => { addElement('image', reader.result); event.target.value = ''; };
-      reader.readAsDataURL(file);
-    });
-    ['elementContent','elementColor','elementSize','elementRotation','elementOpacity'].forEach((id) => $(id).addEventListener('input', updateSelectedElement));
-    $('elementRemove').addEventListener('click', () => { designElements = designElements.filter((element) => element.id !== selectedElementId); selectedElementId = designElements.at(-1)?.id || null; renderElementStudio(); });
-    $('elementDuplicate').addEventListener('click', () => { const element = selectedElement(); if (!element) return; const copy = { ...cloneElements([element])[0], id:makeElementId(), x:Math.min(100, element.x + 5), y:Math.min(100, element.y + 5) }; designElements.push(copy); selectedElementId = copy.id; renderElementStudio(); });
-    $('elementBack').addEventListener('click', () => { const index = designElements.findIndex((element) => element.id === selectedElementId); if (index > 0) [designElements[index - 1], designElements[index]] = [designElements[index], designElements[index - 1]]; renderElementStudio(); });
-    $('elementForward').addEventListener('click', () => { const index = designElements.findIndex((element) => element.id === selectedElementId); if (index >= 0 && index < designElements.length - 1) [designElements[index + 1], designElements[index]] = [designElements[index], designElements[index + 1]]; renderElementStudio(); });
-    $('designForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const url = editingId ? `/api/designs/${encodeURIComponent(editingId)}` : '/api/designs';
-      const response = await fetch(url, { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData()) });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) { $('status').textContent = result.error || 'Could not save design.'; return; }
-      $('status').textContent = editingId ? 'Design updated.' : 'Design added.';
-      await loadDesigns();
-      editingId = result.id;
-      designElements = cloneElements(result.elements); selectedElementId = designElements.at(-1)?.id || null; renderElementStudio();
-      $('formTitle').textContent = `Edit ${result.name}`;
-    });
-    $('newDesign').addEventListener('click', resetForm);
-    $('cancelEdit').addEventListener('click', resetForm);
-
-    async function loadPhotos() {
-      const list = await (await fetch('/api/photos')).json();
-      $('photoCount').textContent = list.length;
-      const grid = $('photoGrid');
-      grid.replaceChildren();
-      if (!list.length) { grid.textContent = 'No strips yet. They appear here after each session.'; return; }
-      list.forEach((photo) => {
-        const figure = document.createElement('figure');
-        const open = document.createElement('button'); open.type = 'button'; open.className = 'photo-open'; open.setAttribute('aria-label', `Preview ${photo.name}`);
-        const image = document.createElement('img'); image.src = photo.url; image.loading = 'lazy'; image.alt = '';
-        const caption = document.createElement('figcaption');
-        const label = document.createElement('span'); label.textContent = photo.name.replace('strip-', '').replace('.jpg', '');
-        const button = document.createElement('button'); button.type = 'button'; button.textContent = 'Delete';
-        button.addEventListener('click', async () => { if (confirm('Delete this strip?')) { await fetch('/api/photos/' + encodeURIComponent(photo.name), { method: 'DELETE' }); loadPhotos(); } });
-        open.addEventListener('click', () => { $('photoPreviewImage').src = photo.url; $('photoPreviewName').textContent = label.textContent; $('photoPreview').showModal(); });
-        open.appendChild(image); caption.append(label, button); figure.append(open, caption); grid.appendChild(figure);
-      });
-    }
-
-    $('photoPreviewClose').addEventListener('click', () => $('photoPreview').close());
-    $('photoPreview').addEventListener('click', (event) => { if (event.target === $('photoPreview')) $('photoPreview').close(); });
-
-    resetForm();
-    loadDesigns().catch(() => { $('status').textContent = 'Could not load designs. Restart the booth server.'; });
-    loadPhotos();
-  </script>
+  <dialog id="photoPreview" class="photo-preview"><div class="photo-preview-head"><strong id="photoPreviewName">Saved photo strip</strong><button id="photoPreviewClose" type="button">Close ×</button></div><div class="photo-preview-body"><img id="photoPreviewImage" alt="Saved photo strip preview"></div></dialog>
+  <script src="admin.js?v=20261001-1"></script>
 </body>
 </html>

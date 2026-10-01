@@ -249,18 +249,27 @@ function drawDesignElements(ctx, width, height, theme) {
     ctx.translate(x, y);
     ctx.rotate((Number(element.rotation) || 0) * Math.PI / 180);
     ctx.globalAlpha = Math.max(.2, Math.min(1, (Number(element.opacity) || 100) / 100));
-    if (element.type === 'image') {
+    if (element.type === 'shape') {
+      ctx.fillStyle = element.color || '#ffffff';
+      if (element.shape === 'circle') {
+        ctx.beginPath(); ctx.arc(0, 0, size / 2, 0, Math.PI * 2); ctx.fill();
+      } else if (element.shape === 'line') {
+        ctx.fillRect(-size / 2, -Math.max(8, size * .06) / 2, size, Math.max(8, size * .06));
+      } else {
+        ctx.fillRect(-size / 2, -size * .3, size, size * .6);
+      }
+    } else if (element.type === 'image') {
       const image = getElementImage(element.src, theme);
       if (image?.complete && image.naturalWidth) {
         const imageHeight = size * image.naturalHeight / image.naturalWidth;
         ctx.drawImage(image, -size / 2, -imageHeight / 2, size, imageHeight);
       }
     } else {
-      const fontFamily = element.type === 'emoji' ? '"Segoe UI Emoji","Apple Color Emoji",sans-serif' : (theme.fontStyle === 'modern' ? 'Segoe UI, sans-serif' : 'Georgia, serif');
+      const fontFamily = element.type === 'emoji' ? '"Segoe UI Emoji","Apple Color Emoji",sans-serif' : ({ modern:'Segoe UI, sans-serif', display:'Impact, "Arial Black", sans-serif', editorial:'Georgia, serif' }[element.fontFamily || theme.fontStyle] || 'Georgia, serif');
       ctx.fillStyle = element.color || '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = `${element.type === 'text' ? '800 ' : ''}${Math.max(28, size)}px ${fontFamily}`;
+      ctx.font = `${element.type === 'text' ? `${element.fontWeight || 800} ` : ''}${Math.max(28, size)}px ${fontFamily}`;
       ctx.fillText(element.content || (element.type === 'emoji' ? '★' : 'Your text'), 0, 0, width * .92);
     }
     ctx.restore();

@@ -9,7 +9,7 @@ The server binds to `127.0.0.1`, so the booth remains available only on the comp
 - Laptop webcam and external-camera selection
 - Four-photo sessions with an on-screen countdown
 - Branded photo strips with downloadable JPEG output
-- Staff design studio with colors, patterns, typography, stickers, text, and uploaded elements
+- Canva-style staff design studio with templates, layers, shapes, text, stickers, and uploaded elements
 - Custom event-category tabs such as General, Valentines, and Graduation
 - Saved-strip gallery with full-size preview
 - A4 and Letter print layouts with portrait or landscape orientation
@@ -68,6 +68,10 @@ The staff workspace supports:
 - Editorial or modern typography
 - Photo spacing, borders, margins, footer size, logo, date, and tagline controls
 - Draggable text, emoji stickers, and uploaded PNG/JPEG/WebP elements
+- Rectangle, circle, and line elements with color, size, rotation, and opacity controls
+- Layer ordering, duplication, deletion, and one-click canvas alignment
+- Undo and redo, zoom controls, optional grid snapping, and keyboard nudging
+- Keyboard shortcuts for undo/redo, duplicate, delete, and fine positioning
 
 Designs are stored locally in `data/designs.json`.
 
@@ -123,6 +127,8 @@ const CONFIG = {
 ├── photos/                Locally saved session strips (ignored by Git)
 ├── public/
 │   ├── admin.html         Staff design studio and gallery
+│   ├── admin.css          Canva-style studio layout and controls
+│   ├── admin.js           Design editor, layers, history, and API integration
 │   ├── app.js             Booth, camera, strip, preview, and print logic
 │   ├── harpooner-logo.jpg Brand logo
 │   ├── index.html         Guest booth interface
@@ -182,4 +188,3 @@ Then open `http://localhost:3001`.
 ## Privacy and deployment
 
 This application is designed for a single local booth computer. It has no authentication and should not be exposed directly to the public internet. Photos, designs, and settings remain on the local machine unless someone deliberately copies or uploads them.
-
