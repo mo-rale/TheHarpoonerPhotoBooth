@@ -46,6 +46,8 @@ let printPlacements = [];
 let printPlacementKey = '';
 let placementZ = 1;
 let updateAvailable = false;
+let sessionPhotoEffect = 'original';
+const PHOTO_FILTERS = { original:'none', bw:'grayscale(1)', sepia:'sepia(.72) contrast(1.04)', vivid:'saturate(1.35) contrast(1.12)' };
 
 function setUpdateState(label, state = '', disabled = false) {
   $('updateLabel').textContent = label;
@@ -96,6 +98,27 @@ function resetThumbs() {
   $('shotProgress').textContent = `0/${CONFIG.shots}`;
   $('shotBadge').textContent = `Photo 1 of ${CONFIG.shots}`;
   $('captureMessage').textContent = 'Ready when you are.';
+}
+
+function setSessionControlsDisabled(disabled) {
+  ['sessionTimer', 'sessionShots', 'sessionFilter'].forEach((id) => { $(id).disabled = disabled; });
+}
+
+function applySessionFilter() {
+  const filter = PHOTO_FILTERS[sessionPhotoEffect] || 'none';
+  $('boothCam').style.filter = filter;
+  const label = $('sessionFilter').selectedOptions[0]?.textContent || 'Original';
+  $('liveBadge').textContent = `● Live · ${label}`;
+}
+
+function filterFrame(frame) {
+  if (sessionPhotoEffect === 'original') return frame;
+  const canvas = document.createElement('canvas');
+  canvas.width = frame.width; canvas.height = frame.height;
+  const ctx = canvas.getContext('2d');
+  ctx.filter = PHOTO_FILTERS[sessionPhotoEffect] || 'none';
+  ctx.drawImage(frame, 0, 0);
+  return canvas;
 }
 
 function renderCameraOptions(devices, selectedId) {
@@ -227,6 +250,7 @@ function grabFrame() {
   canvas.height = 780;
   const ctx = canvas.getContext('2d');
   if (CONFIG.mirrorCaptures) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+  ctx.filter = PHOTO_FILTERS[sessionPhotoEffect] || 'none';
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
   return canvas;
 }
@@ -648,12 +672,13 @@ async function runSession() {
   resetThumbs();
   $('captureBtn').disabled = true;
   $('captureBtn').textContent = 'Session in progress';
+  setSessionControlsDisabled(true);
   try {
     for (let i = 0; i < CONFIG.shots; i += 1) {
       $('shotBadge').textContent = `Photo ${i + 1} of ${CONFIG.shots}`;
       $('captureMessage').textContent = i === 0 ? 'Get ready — your first photo is next.' : 'Nice! Get ready for the next one.';
       await countdown(demoMode ? 1 : CONFIG.countdownSeconds);
-      const frame = demoMode ? createDemoFrame(i) : grabFrame();
+      const frame = demoMode ? filterFrame(createDemoFrame(i)) : grabFrame();
       frames.push(frame);
       showThumb(frame, i);
       const flash = $('flash');
@@ -674,6 +699,7 @@ async function runSession() {
     busy = false;
     $('captureBtn').disabled = false;
     $('captureBtn').innerHTML = '<span>▣</span> Start photos';
+    setSessionControlsDisabled(false);
   }
 }
 
@@ -699,6 +725,13 @@ if (navigator.mediaDevices?.addEventListener) {
 $('enterBoothBtn').addEventListener('click', () => { resetThumbs(); show('booth'); });
 $('backToCheck').addEventListener('click', () => show('cameraCheck'));
 $('captureBtn').addEventListener('click', runSession);
+$('sessionTimer').addEventListener('change', (event) => {
+  CONFIG.countdownSeconds = Math.max(1, Math.min(15, Number(event.target.value) || 3));
+});
+$('sessionFilter').addEventListener('change', (event) => {
+  sessionPhotoEffect = event.target.value;
+  applySessionFilter();
+});
 $('againBtn').addEventListener('click', () => { resetThumbs(); show('booth'); });
 $('doneBtn').addEventListener('click', async () => {
   const button = $('doneBtn');

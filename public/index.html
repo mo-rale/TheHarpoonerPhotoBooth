@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#030821">
   <title>The Harpooner PhotoBooth</title>
-  <link rel="stylesheet" href="style.css?v=20261001-17">
+  <link rel="stylesheet" href="style.css?v=20261001-18">
 </head>
 <body>
   <div class="ambient ambient-one"></div>
@@ -74,7 +74,7 @@
             <li><b>✓</b><span><strong>Center yourself</strong><small>Leave a little room around everyone in the frame.</small></span></li>
             <li><b>✓</b><span><strong>Clear your background</strong><small>A simple background keeps the focus on you.</small></span></li>
           </ul>
-          <div class="notice"><span>▣</span><div><strong>Four photos coming up</strong><small>Each photo gets a three-second countdown.</small></div></div>
+          <div class="notice"><span>▣</span><div><strong>Four photos coming up</strong><small>Adjust the timer and filter before starting your session.</small></div></div>
         </aside>
       </div>
       <p id="camError" class="error" hidden></p>
@@ -87,14 +87,14 @@
     <section id="booth" class="screen booth-screen" aria-labelledby="boothTitle">
       <div class="booth-titlebar">
         <button id="backToCheck" class="text-button" type="button">← Back</button>
-        <div><small>Solo session</small><strong id="boothTitle">Photo Booth</strong></div>
+        <div><small>Self-service session</small><strong id="boothTitle">Photo Booth</strong></div>
         <span class="ready-pill is-ready">● Camera ready</span>
       </div>
       <div class="capture-grid">
         <article class="capture-stage panel">
           <div class="video-frame booth-video">
             <video id="boothCam" autoplay playsinline muted></video>
-            <div class="live-badge">● Live · Original</div><div id="shotBadge" class="shot-badge">Photo 1 of 4</div>
+            <div id="liveBadge" class="live-badge">● Live · Original</div><div id="shotBadge" class="shot-badge">Photo 1 of 4</div>
             <div id="countdown" class="countdown"></div>
             <div class="corner corner-tl"></div><div class="corner corner-tr"></div><div class="corner corner-bl"></div><div class="corner corner-br"></div>
           </div>
@@ -103,8 +103,10 @@
         <aside class="panel shot-panel">
           <div class="panel-heading"><span><small>Your shots</small><strong>Photo strip</strong></span><span id="shotProgress">0/4</span></div>
           <div id="thumbGrid" class="thumb-grid"></div>
-          <div class="session-settings">
-            <div><small>Timer</small><strong>3 sec</strong></div><div><small>Photos</small><strong>4 shots</strong></div><div><small>Filter</small><strong>Original</strong></div>
+          <div class="session-settings" aria-label="Photo session settings">
+            <label><small>Timer</small><select id="sessionTimer" aria-label="Countdown timer"><option value="1">1 sec</option><option value="3" selected>3 sec</option><option value="5">5 sec</option><option value="10">10 sec</option><option value="15">15 sec</option></select></label>
+            <label><small>Photos</small><select id="sessionShots" aria-label="Number of photos"><option value="4" selected>4 shots</option><option value="3" disabled>3 shots · coming soon</option></select></label>
+            <label><small>Filter</small><select id="sessionFilter" aria-label="Photo filter"><option value="original" selected>Original</option><option value="bw">Black &amp; white</option><option value="sepia">Sepia</option><option value="vivid">Vivid</option></select></label>
           </div>
         </aside>
       </div>
@@ -179,6 +181,6 @@
   </dialog>
   <div id="printSheet" aria-hidden="true"></div>
   <a id="adminLink" href="admin.html">Staff gallery</a>
-  <script src="app.js?v=20261001-21"></script>
+  <script src="app.js?v=20261001-22"></script>
 </body>
 </html>
