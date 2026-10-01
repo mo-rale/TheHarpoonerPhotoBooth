@@ -16,6 +16,7 @@ The server binds to `127.0.0.1`, so the booth remains available only on the comp
 - Configurable copies, strip width, margins, spacing, alignment, and free arrangement
 - Exact-size print CSS for consistent physical output
 - Optional camera-free developer preview controlled from the staff page
+- Two-step GitHub update checker with safe fast-forward installation
 
 ## Requirements
 

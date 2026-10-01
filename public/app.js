@@ -45,6 +45,44 @@ const DEVELOPER_PREVIEW_KEY = 'harpoonerDeveloperPreview';
 let printPlacements = [];
 let printPlacementKey = '';
 let placementZ = 1;
+let updateAvailable = false;
+
+function setUpdateState(label, state = '', disabled = false) {
+  $('updateLabel').textContent = label;
+  $('updateButton').className = `status-pill ${state}`.trim();
+  $('updateButton').disabled = disabled;
+}
+
+async function handleUpdate() {
+  const installing = updateAvailable;
+  setUpdateState(installing ? 'Installing…' : 'Checking…', 'checking', true);
+  try {
+    const response = await fetch(installing ? '/api/update/install' : '/api/update/check', { method:'POST' });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'Update check failed.');
+    if (!installing && result.updateAvailable) {
+      updateAvailable = true;
+      setUpdateState(`Install update (${result.behind})`, 'available');
+      $('updateButton').title = result.latestMessage || 'A newer GitHub version is available.';
+      return;
+    }
+    updateAvailable = false;
+    if (installing) {
+      setUpdateState(result.restartRequired ? 'Updated · restart server' : 'Updated · reload', 'updated');
+      $('updateButton').title = `Updated to ${result.current || 'the latest version'}.`;
+      if (!result.restartRequired) setTimeout(() => window.location.reload(), 1000);
+    } else {
+      setUpdateState('Up to date', 'updated');
+      $('updateButton').title = `Current version ${result.current || ''}`.trim();
+      setTimeout(() => setUpdateState('Check updates'), 3000);
+    }
+  } catch (error) {
+    updateAvailable = false;
+    setUpdateState('Update failed', 'error');
+    $('updateButton').title = error.message;
+    setTimeout(() => setUpdateState('Check updates'), 5000);
+  }
+}
 
 function show(name) {
   screens.forEach((id) => $(id).classList.toggle('active', id === name));
@@ -690,6 +728,7 @@ $('printCopies').addEventListener('change', updatePrintSummary);
 $('stripWidth').addEventListener('change', updatePrintSummary);
 window.addEventListener('afterprint', () => $('printSheet').replaceChildren());
 $('brandHome').addEventListener('click', (event) => { event.preventDefault(); if (!busy) show('select'); });
+$('updateButton').addEventListener('click', handleUpdate);
 $('themeGrid').addEventListener('click', (event) => {
   const card = event.target.closest('.theme-card');
   if (!card) return;

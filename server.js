@@ -2,12 +2,38 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { execFile } = require('child_process');
 
 const PORT = process.env.PORT || 3000;
 const HOST = '127.0.0.1';
 const PHOTOS_DIR = path.join(__dirname, 'photos');
 const DATA_DIR = path.join(__dirname, 'data');
 const DESIGNS_FILE = path.join(DATA_DIR, 'designs.json');
+const runGit = (args, timeout = 120000) => new Promise((resolve, reject) => {
+  execFile('git', args, { cwd:__dirname, timeout, windowsHide:true, maxBuffer:1024 * 1024 }, (error, stdout, stderr) => {
+    if (error) {
+      error.detail = String(stderr || stdout || error.message).trim().slice(0, 300);
+      reject(error);
+      return;
+    }
+    resolve(String(stdout).trim());
+  });
+});
+const lines = (value) => String(value || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+const getUpdateStatus = async () => {
+  await runGit(['fetch', '--quiet', 'origin', 'main:refs/remotes/origin/main']);
+  const [current, latest, behindText, aheadText, latestMessage] = await Promise.all([
+    runGit(['rev-parse', '--short', 'HEAD']),
+    runGit(['rev-parse', '--short', 'origin/main']),
+    runGit(['rev-list', '--count', 'HEAD..origin/main']),
+    runGit(['rev-list', '--count', 'origin/main..HEAD']),
+    runGit(['log', '-1', '--pretty=%s', 'origin/main']),
+  ]);
+  const behind = Number(behindText) || 0;
+  const ahead = Number(aheadText) || 0;
+  return { current, latest, behind, ahead, latestMessage, updateAvailable:behind > 0 && ahead === 0, diverged:behind > 0 && ahead > 0 };
+};
+let updateInProgress = false;
 fs.mkdirSync(PHOTOS_DIR, { recursive: true });
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -187,6 +213,45 @@ app.get('/api/photos', (_req, res) => {
 app.delete('/api/photos/:name', (req, res) => {
   const name = path.basename(req.params.name);
   fs.unlink(path.join(PHOTOS_DIR, name), (err) => (err ? res.status(404).end() : res.json({ ok: true })));
+});
+
+app.post('/api/update/check', async (_req, res) => {
+  if (updateInProgress) return res.status(409).json({ error:'Another update operation is already running.' });
+  updateInProgress = true;
+  try {
+    const status = await getUpdateStatus();
+    if (status.diverged) return res.status(409).json({ error:'This checkout has local commits and cannot be updated automatically.' });
+    res.json({
+      current:status.current,
+      latest:status.latest,
+      behind:status.behind,
+      updateAvailable:status.updateAvailable,
+      latestMessage:status.latestMessage,
+    });
+  } catch (error) {
+    res.status(500).json({ error:`Could not check GitHub: ${error.detail || error.message}` });
+  } finally { updateInProgress = false; }
+});
+
+app.post('/api/update/install', async (_req, res) => {
+  if (updateInProgress) return res.status(409).json({ error:'Another update operation is already running.' });
+  updateInProgress = true;
+  try {
+    const status = await getUpdateStatus();
+    if (status.diverged || status.ahead > 0) return res.status(409).json({ error:'This checkout has local commits and cannot be updated automatically.' });
+    if (!status.updateAvailable) return res.json({ updated:false, current:status.current, restartRequired:false });
+    const incomingFiles = lines(await runGit(['diff', '--name-only', 'HEAD..origin/main']));
+    const dirtyStatus = await runGit(['status', '--porcelain', '--untracked-files=no']);
+    const dirtyFiles = String(dirtyStatus).split(/\r?\n/).filter(Boolean).map((line) => line.slice(3).split(' -> ').at(-1));
+    const conflicts = incomingFiles.filter((file) => dirtyFiles.includes(file));
+    if (conflicts.length) return res.status(409).json({ error:`Update would overwrite local changes in: ${conflicts.slice(0, 4).join(', ')}` });
+    await runGit(['merge', '--ff-only', 'origin/main']);
+    const current = await runGit(['rev-parse', '--short', 'HEAD']);
+    const restartRequired = incomingFiles.some((file) => file === 'server.js' || file === 'package.json' || file === 'package-lock.json');
+    res.json({ updated:true, current, restartRequired, files:incomingFiles.length });
+  } catch (error) {
+    res.status(500).json({ error:`Could not install update: ${error.detail || error.message}` });
+  } finally { updateInProgress = false; }
 });
 
 app.listen(PORT, HOST, () => console.log(`Photobooth running at http://localhost:${PORT}`));
