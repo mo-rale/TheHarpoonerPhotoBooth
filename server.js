@@ -47,6 +47,7 @@ const sanitizeElements = (elements) => (Array.isArray(elements) ? elements : [])
     y: clampNumber(element.y, 0, 100, 50),
     size: clampNumber(element.size, 4, type === 'image' || type === 'photo' ? 100 : 60, type === 'text' ? 10 : 14),
     height: clampNumber(element.height, 4, 100, 18),
+    fit: allowed(element.fit, ['contain', 'stretch'], type === 'image' && Number(element.height) === 100 ? 'stretch' : 'contain'),
     slot: clampNumber(element.slot, 1, 4, 1),
     rotation: clampNumber(element.rotation, -180, 180, 0),
     opacity: clampNumber(element.opacity, 20, 100, 100),

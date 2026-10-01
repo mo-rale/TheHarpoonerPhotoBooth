@@ -81,6 +81,7 @@ function formData() {
 
 function elementLabel(element) {
   if (element.type === 'photo') return `Photo box ${element.slot || 1}`;
+  if (element.type === 'image' && element.fit === 'stretch') return 'Canva artwork';
   if (element.type === 'image') return 'Uploaded image';
   if (element.type === 'shape') return `${element.shape || 'rectangle'} shape`;
   if (element.type === 'emoji') return `Sticker ${element.content || '★'}`;
@@ -109,7 +110,9 @@ function renderCanvasElements() {
       node.textContent = `PHOTO ${element.slot || 1}`;
     } else if (element.type === 'image') {
       node.style.width = `${element.size}%`;
+      if (element.fit === 'stretch') node.style.height = `${element.height || 100}%`;
       const image = document.createElement('img'); image.src = element.src; image.alt = '';
+      if (element.fit === 'stretch') { image.style.height = '100%'; image.style.objectFit = 'fill'; }
       node.appendChild(image);
     } else if (element.type === 'shape') {
       node.classList.add('shape-element', element.shape || 'rectangle');
@@ -149,7 +152,7 @@ function renderCanvasElements() {
         const startDistance = Math.max(1, Math.hypot(event.clientX - centerX, event.clientY - centerY));
         const startAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI;
         const startSize = element.size;
-        const startHeight = element.height || 18;
+        const startHeight = element.height || (element.fit === 'stretch' ? 100 : 18);
         const startRotation = element.rotation || 0;
         let changed = false;
         handle.setPointerCapture(event.pointerId);
@@ -162,7 +165,7 @@ function renderCanvasElements() {
             element.size = Math.max(4, Math.min(maxSize, Math.round(startSize * distance / startDistance)));
             if (element.type === 'image' || element.type === 'shape' || element.type === 'photo') node.style.width = `${element.size}%`;
             if (element.type === 'shape') node.style.height = element.shape === 'line' ? `${Math.max(3, element.size * .12)}px` : `${Math.max(4, element.size * .6)}%`;
-            if (element.type === 'photo') {
+            if (element.type === 'photo' || (element.type === 'image' && element.fit === 'stretch')) {
               element.height = Math.max(4, Math.min(100, Math.round(startHeight * distance / startDistance)));
               node.style.height = `${element.height}%`;
               $('elementHeight').value = String(element.height);
@@ -263,7 +266,8 @@ function renderElementInspector() {
   $('textStyleFields').hidden = element.type !== 'text';
   $('shapeField').hidden = element.type !== 'shape';
   $('elementColorField').hidden = element.type === 'photo' || element.type === 'image';
-  $('photoHeightField').hidden = element.type !== 'photo';
+  const hasIndependentHeight = element.type === 'photo' || (element.type === 'image' && element.fit === 'stretch');
+  $('photoHeightField').hidden = !hasIndependentHeight;
   $('elementContent').value = element.content || '';
   $('elementFont').value = element.fontFamily || 'editorial';
   $('elementWeight').value = String(element.fontWeight || 700);
@@ -273,12 +277,12 @@ function renderElementInspector() {
   $('elementY').value = String(element.y ?? 50);
   $('elementSize').max = element.type === 'image' || element.type === 'photo' ? '100' : '60';
   $('elementSize').value = String(element.size ?? 14);
-  $('elementSizeLabel').textContent = element.type === 'photo' ? 'Width' : 'Size';
-  $('elementHeight').value = String(element.height ?? 18);
+  $('elementSizeLabel').textContent = hasIndependentHeight ? 'Width' : 'Size';
+  $('elementHeight').value = String(element.height ?? (element.fit === 'stretch' ? 100 : 18));
   $('elementRotation').value = String(element.rotation || 0);
   $('elementOpacity').value = String(element.opacity ?? 100);
   $('elementSizeValue').textContent = String(element.size ?? 14);
-  $('elementHeightValue').textContent = String(element.height ?? 18);
+  $('elementHeightValue').textContent = String(element.height ?? (element.fit === 'stretch' ? 100 : 18));
   $('elementRotationValue').textContent = `${element.rotation || 0}°`;
   $('elementOpacityValue').textContent = `${element.opacity ?? 100}%`;
 }
@@ -303,7 +307,8 @@ function addElement(type, value, extra = {}) {
     src: type === 'image' ? value : '',
     x: 50, y: 20 + (designElements.length % 7) * 10,
     size: type === 'text' ? 12 : type === 'shape' ? 24 : type === 'photo' ? 78 : 14,
-    height: type === 'photo' ? 18 : 14,
+    height: type === 'photo' ? 18 : type === 'image' && extra.fit === 'stretch' ? 100 : 14,
+    fit: type === 'image' ? 'contain' : '',
     slot: type === 'photo' ? Math.min(4, designElements.filter((item) => item.type === 'photo').length + 1) : 1,
     rotation: 0, opacity: 100, color: '#ffffff',
     fontFamily: 'editorial', fontWeight: 700, shape: 'rectangle',
@@ -325,7 +330,7 @@ function updateSelectedElement() {
   element.x = Number($('elementX').value);
   element.y = Number($('elementY').value);
   element.size = Number($('elementSize').value);
-  if (element.type === 'photo') element.height = Number($('elementHeight').value);
+  if (element.type === 'photo' || (element.type === 'image' && element.fit === 'stretch')) element.height = Number($('elementHeight').value);
   element.rotation = Number($('elementRotation').value);
   element.opacity = Number($('elementOpacity').value);
   $('elementSizeValue').textContent = String(element.size);
@@ -592,7 +597,7 @@ $('canvaImport').addEventListener('change', (event) => {
       }));
       const overlay = {
         id:makeElementId(), type:'image', content:'', src:processed.source, x:50, y:50, size:100,
-        height:100, slot:1, rotation:0, opacity:100, color:'#ffffff', fontFamily:'editorial', fontWeight:700, shape:'rectangle',
+        height:100, fit:'stretch', slot:1, rotation:0, opacity:100, color:'#ffffff', fontFamily:'editorial', fontWeight:700, shape:'rectangle',
       };
       designElements.push(...photoBoxes, overlay);
       selectedElementId = photoBoxes[0].id;

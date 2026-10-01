@@ -278,7 +278,9 @@ function drawDesignElements(ctx, width, height, theme) {
     } else if (element.type === 'image') {
       const image = getElementImage(element.src, theme);
       if (image?.complete && image.naturalWidth) {
-        const imageHeight = size * image.naturalHeight / image.naturalWidth;
+        const imageHeight = element.fit === 'stretch'
+          ? height * (Number(element.height) || 100) / 100
+          : size * image.naturalHeight / image.naturalWidth;
         ctx.drawImage(image, -size / 2, -imageHeight / 2, size, imageHeight);
       }
     } else {

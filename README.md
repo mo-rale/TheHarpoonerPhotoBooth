@@ -81,7 +81,7 @@ Designs are stored locally in `data/designs.json`.
 
 ### Canva import
 
-Create the artwork in Canva using a **2 × 6 inch** page and place four solid `#00FF00` rectangles where the photos should appear. Export the complete design as a PNG. In the Design Studio, open **Elements → Import Canva green-screen** and select the exported file. The importer removes only near-pure green pixels, keeps ordinary greens in the artwork, and creates an adjustable photo-box layer for every detected green rectangle. Staff can move, resize, rotate, reorder, duplicate, or remove each photo box before saving.
+Create the artwork in Canva using a **2 × 6 inch** page and place four solid `#00FF00` rectangles where the photos should appear. Export the complete design as a PNG. In the Design Studio, open **Elements → Import Canva green-screen** and select the exported file. The importer fits the artwork exactly to the full strip, removes only near-pure green pixels, keeps ordinary greens in the artwork, and creates an adjustable photo-box layer for every detected green rectangle. Staff can move, resize, rotate, reorder, duplicate, or remove each photo box before saving.
 
 A direct Canva account connection is not enabled by default because Canva requires a registered developer integration, OAuth authorization, and API credentials. The local PNG/JPEG/WebP import works without an internet connection or Canva account access from the booth.
 
