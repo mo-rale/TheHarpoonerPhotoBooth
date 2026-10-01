@@ -9,6 +9,8 @@ let designElements = [];
 let selectedElementId = null;
 let zoom = 1;
 let gridEnabled = false;
+let spacePressed = false;
+let canvasPanning = false;
 let undoStack = [];
 let redoStack = [];
 let pendingInspectorSnapshot = null;
@@ -401,11 +403,24 @@ function showPane(name) {
   document.querySelectorAll('.tool-pane').forEach((pane) => pane.classList.toggle('active', pane.id === `${name}Pane`));
 }
 
-function applyZoom(next) {
-  zoom = Math.max(.5, Math.min(1.5, next));
+function applyZoom(next, focalPoint = null) {
+  const viewport = $('canvasViewport');
+  const previousZoom = zoom;
+  const focusX = focalPoint?.x ?? viewport.clientWidth / 2;
+  const focusY = focalPoint?.y ?? viewport.clientHeight / 2;
+  const contentX = viewport.scrollLeft + focusX;
+  const contentY = viewport.scrollTop + focusY;
+  zoom = Math.max(.4, Math.min(3, next));
   $('designPreview').style.transform = `scale(${zoom})`;
   $('canvasStage').style.width = `${220 * zoom}px`; $('canvasStage').style.height = `${650 * zoom}px`;
   $('zoomValue').textContent = `${Math.round(zoom * 100)}%`;
+  if (previousZoom !== zoom) {
+    requestAnimationFrame(() => {
+      const ratio = zoom / previousZoom;
+      viewport.scrollLeft = contentX * ratio - focusX;
+      viewport.scrollTop = contentY * ratio - focusY;
+    });
+  }
 }
 
 function alignSelected(alignment) {
@@ -495,8 +510,52 @@ $('toggleGrid').addEventListener('click', () => { gridEnabled = !gridEnabled; $(
 $('elementOverlay').addEventListener('click', (event) => { if (event.target === $('elementOverlay')) { selectedElementId = null; renderElementStudio(); } });
 $('photoPreviewClose').addEventListener('click', () => $('photoPreview').close()); $('photoPreview').addEventListener('click', (event) => { if (event.target === $('photoPreview')) $('photoPreview').close(); });
 
+$('canvasViewport').addEventListener('wheel', (event) => {
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault();
+    const bounds = $('canvasViewport').getBoundingClientRect();
+    applyZoom(zoom + (event.deltaY < 0 ? .1 : -.1), { x:event.clientX - bounds.left, y:event.clientY - bounds.top });
+  } else if (event.shiftKey) {
+    event.preventDefault();
+    $('canvasViewport').scrollLeft += event.deltaY || event.deltaX;
+  }
+}, { passive:false });
+
+$('canvasViewport').addEventListener('pointerdown', (event) => {
+  const emptyCanvas = event.target === $('canvasViewport') || event.target === $('canvasStage');
+  if (!(event.button === 1 || spacePressed || (event.button === 0 && emptyCanvas))) return;
+  event.preventDefault();
+  const viewport = $('canvasViewport');
+  canvasPanning = true;
+  viewport.classList.add('panning');
+  viewport.setPointerCapture(event.pointerId);
+  const startX = event.clientX;
+  const startY = event.clientY;
+  const startLeft = viewport.scrollLeft;
+  const startTop = viewport.scrollTop;
+  let moved = false;
+  const pan = (moveEvent) => {
+    moved = true;
+    viewport.scrollLeft = startLeft - (moveEvent.clientX - startX);
+    viewport.scrollTop = startTop - (moveEvent.clientY - startY);
+  };
+  const finishPan = () => {
+    viewport.removeEventListener('pointermove', pan);
+    viewport.removeEventListener('pointerup', finishPan);
+    viewport.removeEventListener('pointercancel', finishPan);
+    viewport.classList.remove('panning');
+    canvasPanning = false;
+    if (!spacePressed) viewport.classList.remove('pan-ready');
+    if (!moved && emptyCanvas) { selectedElementId = null; renderElementStudio(); }
+  };
+  viewport.addEventListener('pointermove', pan);
+  viewport.addEventListener('pointerup', finishPan);
+  viewport.addEventListener('pointercancel', finishPan);
+});
+
 document.addEventListener('keydown', (event) => {
   const editingText = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
+  if (event.code === 'Space' && !editingText) { spacePressed = true; $('canvasViewport').classList.add('pan-ready'); event.preventDefault(); }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo(); return; }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); redo(); return; }
   if (editingText || !selectedElement()) return;
@@ -505,6 +564,8 @@ document.addEventListener('keydown', (event) => {
   const movement = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] }[event.key];
   if (movement) { event.preventDefault(); const before = elementSnapshot(); const element = selectedElement(); const step = event.shiftKey ? 5 : 1; element.x = Math.max(0, Math.min(100, element.x + movement[0] * step)); element.y = Math.max(0, Math.min(100, element.y + movement[1] * step)); remember(before); renderElementStudio(); }
 });
+document.addEventListener('keyup', (event) => { if (event.code === 'Space') { spacePressed = false; if (!canvasPanning) $('canvasViewport').classList.remove('pan-ready'); } });
+window.addEventListener('blur', () => { spacePressed = false; canvasPanning = false; $('canvasViewport').classList.remove('pan-ready', 'panning'); });
 
 resetForm();
 applyZoom(.82);

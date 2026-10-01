@@ -71,6 +71,7 @@ The staff workspace supports:
 - Rectangle, circle, and line elements with color, size, rotation, and opacity controls
 - Layer ordering, duplication, deletion, and one-click canvas alignment
 - Direct mouse handles for moving, resizing, and rotating canvas elements
+- Mouse and trackpad canvas navigation with drag-to-pan and cursor-centered zoom
 - Undo and redo, zoom controls, optional grid snapping, and keyboard nudging
 - Keyboard shortcuts for undo/redo, duplicate, delete, and fine positioning
 
