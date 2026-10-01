@@ -23,7 +23,7 @@ const DEFAULT_DESIGNS = [
 const DESIGN_DEFAULTS = {
   pattern: 'solid', photoEffect: 'original', fontStyle: 'editorial', padding: 64, gap: 26,
   borderWidth: 5, footerHeight: 230, tagline: 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS',
-  showDate: true, showLogo: true, category: 'General', elements: [],
+  showDate: true, showLogo: true, blankCanvas: false, category: 'General', elements: [],
 };
 const cleanText = (value, max) => String(value || '').trim().slice(0, max);
 const cleanColor = (value) => /^#[0-9a-f]{6}$/i.test(value || '') ? value.toLowerCase() : null;
@@ -71,6 +71,7 @@ const normalizeDesign = (design) => ({
   category: cleanText(design.category || 'General', 30) || 'General',
   showDate: design.showDate !== false,
   showLogo: design.showLogo !== false,
+  blankCanvas: design.blankCanvas === true,
   elements: sanitizeElements(design.elements),
 });
 
@@ -106,6 +107,7 @@ const sanitizeDesign = (input, id) => {
     category: cleanText(input.category || 'General', 30) || 'General',
     showDate: input.showDate !== false,
     showLogo: input.showLogo !== false,
+    blankCanvas: input.blankCanvas === true,
     elements: sanitizeElements(input.elements),
   };
   return design.name && design.bg && design.ink && design.accent && design.border ? design : null;

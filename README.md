@@ -74,6 +74,7 @@ The staff workspace supports:
 - Mouse and trackpad canvas navigation with drag-to-pan and cursor-centered zoom
 - Canva green-screen import that converts pure `#00FF00` boxes into transparent photo windows
 - Adjustable photo-box layers with independent position, width, height, rotation, and stacking order
+- New designs start as a blank 2:6 canvas, with an optional standard-layout toggle
 - Undo and redo, zoom controls, optional grid snapping, and keyboard nudging
 - Keyboard shortcuts for undo/redo, duplicate, delete, and fine positioning
 

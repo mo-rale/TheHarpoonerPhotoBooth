@@ -75,6 +75,7 @@ function formData() {
     tagline: $('designTagline').value,
     showLogo: $('designShowLogo').checked,
     showDate: $('designShowDate').checked,
+    blankCanvas: $('designBlankCanvas').checked,
     elements: clone(designElements),
   };
 }
@@ -352,6 +353,7 @@ function updatePreview() {
   preview.style.setProperty('--preview-border', design.border);
   preview.className = `mini-strip ${design.pattern} ${design.photoEffect}`;
   preview.classList.toggle('custom-photo-layout', design.elements.some((element) => element.type === 'photo'));
+  preview.classList.toggle('blank-canvas', design.blankCanvas);
   preview.style.padding = `${Math.max(8, design.padding / 4)}px`;
   preview.style.gap = `${Math.max(4, design.gap / 3)}px`;
   preview.style.borderWidth = `${Math.min(10, Math.max(0, design.borderWidth))}px`;
@@ -377,7 +379,7 @@ function resetForm() {
   $('designCategory').value = activeDesignTab === 'all' ? 'General' : activeDesignTab;
   $('designBg').value = '#43d9e7'; $('designInk').value = '#030522'; $('designAccent').value = '#b9f5f6'; $('designBorder').value = '#f1ffff';
   $('designPattern').value = 'solid'; $('designEffect').value = 'original'; $('designFont').value = 'editorial'; $('designPadding').value = '64'; $('designGap').value = '26'; $('designBorderWidth').value = '5'; $('designFooter').value = '230';
-  $('designTagline').value = 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = true; $('designShowDate').checked = true;
+  $('designTagline').value = 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = true; $('designShowDate').checked = true; $('designBlankCanvas').checked = true;
   designElements = []; selectedElementId = null; resetHistory(); renderElementStudio();
   $('status').textContent = ''; updatePreview(); setSaveState('Unsaved design'); renderDesigns();
 }
@@ -389,7 +391,7 @@ function editDesign(design) {
   $('designBg').value = design.bg; $('designInk').value = design.ink; $('designAccent').value = design.accent; $('designBorder').value = design.border;
   $('designPattern').value = design.pattern || (design.checker ? 'checker' : 'solid'); $('designEffect').value = design.photoEffect || 'original'; $('designFont').value = design.fontStyle || 'editorial';
   $('designPadding').value = String(design.padding || 64); $('designGap').value = String(design.gap || 26); $('designBorderWidth').value = String(design.borderWidth ?? 5); $('designFooter').value = String(design.footerHeight || 230);
-  $('designTagline').value = design.tagline || 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = design.showLogo !== false; $('designShowDate').checked = design.showDate !== false;
+  $('designTagline').value = design.tagline || 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = design.showLogo !== false; $('designShowDate').checked = design.showDate !== false; $('designBlankCanvas').checked = design.blankCanvas === true;
   designElements = clone(design.elements || []); selectedElementId = designElements.at(-1)?.id || null; resetHistory();
   renderElementStudio(); updatePreview(); renderDesigns(); setSaveState('Saved design');
 }
@@ -442,7 +444,7 @@ function applyZoom(next, focalPoint = null) {
   const contentY = viewport.scrollTop + focusY;
   zoom = Math.max(.4, Math.min(3, next));
   $('designPreview').style.transform = `scale(${zoom})`;
-  $('canvasStage').style.width = `${220 * zoom}px`; $('canvasStage').style.height = `${650 * zoom}px`;
+  $('canvasStage').style.width = `${220 * zoom}px`; $('canvasStage').style.height = `${660 * zoom}px`;
   $('zoomValue').textContent = `${Math.round(zoom * 100)}%`;
   if (previousZoom !== zoom) {
     requestAnimationFrame(() => {

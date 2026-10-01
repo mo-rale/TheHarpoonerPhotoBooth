@@ -303,7 +303,7 @@ function buildStrip(theme = activeTheme) {
   const gap = theme.gap ?? 26;
   const footer = theme.footerHeight ?? 230;
   const borderWidth = theme.borderWidth ?? 5;
-  const height = pad + frames.length * photoHeight + (frames.length - 1) * gap + footer;
+  const height = width * 3;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -312,7 +312,7 @@ function buildStrip(theme = activeTheme) {
   ctx.fillRect(0, 0, width, height);
   drawPattern(ctx, width, height, theme);
   const hasCustomPhotoBoxes = (theme.elements || []).some((element) => element.type === 'photo');
-  if (!hasCustomPhotoBoxes) frames.forEach((frame, index) => {
+  if (!theme.blankCanvas && !hasCustomPhotoBoxes) frames.forEach((frame, index) => {
     const y = pad + index * (photoHeight + gap);
     ctx.fillStyle = theme.border;
     ctx.fillRect(pad - borderWidth, y - borderWidth, photoWidth + borderWidth * 2, photoHeight + borderWidth * 2);
@@ -321,32 +321,34 @@ function buildStrip(theme = activeTheme) {
     ctx.drawImage(frame, pad, y, photoWidth, photoHeight);
     ctx.restore();
   });
-  const footerTop = height - footer;
-  let footerY = footerTop + 65;
-  if (theme.showLogo && logoImage.complete && logoImage.naturalWidth) {
-    const logoSize = Math.min(72, Math.max(46, footer * .27));
-    const logoY = footerTop + 12;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(width / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(logoImage, width / 2 - logoSize / 2, logoY, logoSize, logoSize);
-    ctx.restore();
-    footerY = logoY + logoSize + 43;
-  }
-  ctx.textAlign = 'center';
-  ctx.fillStyle = theme.ink;
-  const fontFamily = theme.fontStyle === 'modern' ? 'Segoe UI, sans-serif' : 'Georgia, serif';
-  ctx.font = `800 52px ${fontFamily}`;
-  ctx.fillText(CONFIG.footerText, width / 2, footerY);
-  ctx.fillStyle = theme.accent;
-  ctx.fillRect(width / 2 - 90, footerY + 14, 180, 4);
-  ctx.fillStyle = theme.ink;
-  ctx.font = `600 20px ${fontFamily}`;
-  ctx.fillText(theme.tagline || THEME_DEFAULTS.tagline, width / 2, footerY + 49);
-  if (theme.showDate) {
-    ctx.font = '700 18px Segoe UI, sans-serif';
-    ctx.fillText(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase(), width / 2, footerY + 82);
+  if (!theme.blankCanvas) {
+    const footerTop = height - footer;
+    let footerY = footerTop + 65;
+    if (theme.showLogo && logoImage.complete && logoImage.naturalWidth) {
+      const logoSize = Math.min(72, Math.max(46, footer * .27));
+      const logoY = footerTop + 12;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(width / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(logoImage, width / 2 - logoSize / 2, logoY, logoSize, logoSize);
+      ctx.restore();
+      footerY = logoY + logoSize + 43;
+    }
+    ctx.textAlign = 'center';
+    ctx.fillStyle = theme.ink;
+    const fontFamily = theme.fontStyle === 'modern' ? 'Segoe UI, sans-serif' : 'Georgia, serif';
+    ctx.font = `800 52px ${fontFamily}`;
+    ctx.fillText(CONFIG.footerText, width / 2, footerY);
+    ctx.fillStyle = theme.accent;
+    ctx.fillRect(width / 2 - 90, footerY + 14, 180, 4);
+    ctx.fillStyle = theme.ink;
+    ctx.font = `600 20px ${fontFamily}`;
+    ctx.fillText(theme.tagline || THEME_DEFAULTS.tagline, width / 2, footerY + 49);
+    if (theme.showDate) {
+      ctx.font = '700 18px Segoe UI, sans-serif';
+      ctx.fillText(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).toUpperCase(), width / 2, footerY + 82);
+    }
   }
   drawDesignElements(ctx, width, height, theme);
   return canvas;

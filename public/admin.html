@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#02051d">
   <title>The Harpooner PhotoBooth · Design Studio</title>
-  <link rel="stylesheet" href="admin.css?v=20261001-6">
+  <link rel="stylesheet" href="admin.css?v=20261001-7">
 </head>
 <body>
   <header class="topbar">
@@ -127,6 +127,7 @@
         <details>
           <summary>Strip layout</summary>
           <div class="inspector-section">
+            <label class="switch-row"><span><b>Blank strip</b><small>Hide automatic photo slots and footer branding.</small></span><input id="designBlankCanvas" type="checkbox" role="switch" checked></label>
             <div class="two-fields">
               <label class="field"><span>Typography</span><select id="designFont"><option value="editorial">Editorial serif</option><option value="modern">Modern sans</option></select></label>
               <label class="field"><span>Outer margin</span><select id="designPadding"><option value="44">Compact</option><option value="64" selected>Balanced</option><option value="88">Airy</option></select></label>
@@ -182,6 +183,6 @@
   </main>
 
   <dialog id="photoPreview" class="photo-preview"><div class="photo-preview-head"><strong id="photoPreviewName">Saved photo strip</strong><button id="photoPreviewClose" type="button">Close ×</button></div><div class="photo-preview-body"><img id="photoPreviewImage" alt="Saved photo strip preview"></div></dialog>
-  <script src="admin.js?v=20261001-8"></script>
+  <script src="admin.js?v=20261001-9"></script>
 </body>
 </html>
