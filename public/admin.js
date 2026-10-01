@@ -483,6 +483,28 @@ $('elementUpload').addEventListener('change', (event) => {
   if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 2000000) { $('status').textContent = 'Use a PNG, JPG, or WebP image smaller than 2 MB.'; event.target.value = ''; return; }
   const reader = new FileReader(); reader.onload = () => { addElement('image', reader.result, { size:25 }); event.target.value = ''; }; reader.readAsDataURL(file);
 });
+
+function removeCanvaGreenScreen(image) {
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d', { willReadFrequently:true });
+  context.drawImage(image, 0, 0);
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+  let removed = 0;
+  for (let index = 0; index < pixels.data.length; index += 4) {
+    const red = pixels.data[index];
+    const green = pixels.data[index + 1];
+    const blue = pixels.data[index + 2];
+    if (red <= 28 && green >= 242 && blue <= 28) {
+      pixels.data[index + 3] = 0;
+      removed += 1;
+    }
+  }
+  context.putImageData(pixels, 0, 0);
+  return { source:canvas.toDataURL('image/png'), removed };
+}
+
 $('canvaImport').addEventListener('change', (event) => {
   const file = event.target.files[0]; if (!file) return;
   if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 2000000) {
@@ -495,10 +517,21 @@ $('canvaImport').addEventListener('change', (event) => {
     const image = new Image();
     image.onload = () => {
       const ratio = image.naturalWidth / image.naturalHeight;
-      addElement('image', reader.result, { size:100, x:50, y:50, rotation:0, opacity:100 });
+      const processed = removeCanvaGreenScreen(image);
+      if (!processed.removed) {
+        $('status').textContent = 'No pure #00FF00 photo boxes were found. Check the Canva box color and export again.';
+        event.target.value = '';
+        return;
+      }
+      if (processed.source.length > 3000000) {
+        $('status').textContent = 'The processed Canva design is too large. Export a smaller PNG under 2 MB.';
+        event.target.value = '';
+        return;
+      }
+      addElement('image', processed.source, { size:100, x:50, y:50, rotation:0, opacity:100 });
       $('status').textContent = Math.abs(ratio - (2 / 6)) < .08
-        ? 'Canva overlay imported at full-strip size.'
-        : 'Imported. For a full-strip fit, export from Canva using a 2:6 page ratio.';
+        ? 'Canva design imported. Green boxes are now transparent photo windows.'
+        : 'Green boxes removed. For a full-strip fit, export from Canva using a 2:6 page ratio.';
       event.target.value = '';
     };
     image.onerror = () => { $('status').textContent = 'Could not read that Canva export.'; event.target.value = ''; };
