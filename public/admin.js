@@ -393,7 +393,7 @@ function editDesign(design) {
   $('designPadding').value = String(design.padding || 64); $('designGap').value = String(design.gap || 26); $('designBorderWidth').value = String(design.borderWidth ?? 5); $('designFooter').value = String(design.footerHeight || 230);
   $('designTagline').value = design.tagline || 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = design.showLogo !== false; $('designShowDate').checked = design.showDate !== false; $('designBlankCanvas').checked = design.blankCanvas === true;
   designElements = clone(design.elements || []); selectedElementId = designElements.at(-1)?.id || null; resetHistory();
-  renderElementStudio(); updatePreview(); renderDesigns(); setSaveState('Saved design');
+  renderElementStudio(); updatePreview(); renderDesigns(); setSaveState('Saved design'); cleanSavedCanvaArtwork();
 }
 
 function renderDesigns() {
@@ -515,6 +515,38 @@ $('elementUpload').addEventListener('change', (event) => {
   const reader = new FileReader(); reader.onload = () => { addElement('image', reader.result, { size:25 }); event.target.value = ''; }; reader.readAsDataURL(file);
 });
 
+function cleanGreenSpill(pixels, width, height, boxes) {
+  const edgePadding = Math.max(3, Math.round(Math.min(width, height) * .003));
+  let cleaned = 0;
+  boxes.forEach((box) => {
+    const startX = Math.max(0, Math.floor(box.minX - edgePadding));
+    const endX = Math.min(width - 1, Math.ceil(box.maxX + edgePadding));
+    const startY = Math.max(0, Math.floor(box.minY - edgePadding));
+    const endY = Math.min(height - 1, Math.ceil(box.maxY + edgePadding));
+    for (let y = startY; y <= endY; y += 1) {
+      for (let x = startX; x <= endX; x += 1) {
+        const index = (y * width + x) * 4;
+        if (pixels.data[index + 3] === 0) continue;
+        const red = pixels.data[index];
+        const green = pixels.data[index + 1];
+        const blue = pixels.data[index + 2];
+        const nonGreen = Math.max(red, blue);
+        const dominance = green - nonGreen;
+        if (green >= 70 && dominance >= 24 && green >= nonGreen * 1.22) {
+          pixels.data[index + 3] = 0;
+          cleaned += 1;
+        } else if (green >= 45 && dominance >= 10) {
+          const cleanup = Math.min(1, (dominance - 10) / 18);
+          pixels.data[index + 1] = Math.min(green, nonGreen + 6);
+          pixels.data[index + 3] = Math.round(pixels.data[index + 3] * (1 - cleanup));
+          cleaned += 1;
+        }
+      }
+    }
+  });
+  return cleaned;
+}
+
 function removeCanvaGreenScreen(image) {
   const canvas = document.createElement('canvas');
   canvas.width = image.naturalWidth;
@@ -541,7 +573,6 @@ function removeCanvaGreenScreen(image) {
     }
     if (maxX >= 0) rowBounds.push({ y, minX, maxX });
   }
-  context.putImageData(pixels, 0, 0);
   const boxes = [];
   rowBounds.forEach((row) => {
     const current = boxes.at(-1);
@@ -557,7 +588,39 @@ function removeCanvaGreenScreen(image) {
     .filter((box) => (box.maxX - box.minX + 1) * (box.maxY - box.minY + 1) >= canvas.width * canvas.height * .005)
     .sort((a, b) => a.minY - b.minY)
     .slice(0, 4);
+  cleanGreenSpill(pixels, canvas.width, canvas.height, meaningfulBoxes);
+  context.putImageData(pixels, 0, 0);
   return { source:canvas.toDataURL('image/png'), removed, boxes:meaningfulBoxes, width:canvas.width, height:canvas.height };
+}
+
+function cleanSavedCanvaArtwork() {
+  const photoBoxes = designElements.filter((element) => element.type === 'photo');
+  const artwork = designElements.find((element) => element.type === 'image' && element.fit === 'stretch');
+  if (!photoBoxes.length || !artwork?.src) return;
+  const image = new Image();
+  image.onload = () => {
+    if (!designElements.includes(artwork)) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d', { willReadFrequently:true });
+    context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    const boxes = photoBoxes.map((box) => ({
+      minX:(box.x - box.size / 2) * canvas.width / 100,
+      maxX:(box.x + box.size / 2) * canvas.width / 100,
+      minY:(box.y - box.height / 2) * canvas.height / 100,
+      maxY:(box.y + box.height / 2) * canvas.height / 100,
+    }));
+    const cleaned = cleanGreenSpill(pixels, canvas.width, canvas.height, boxes);
+    if (!cleaned) return;
+    context.putImageData(pixels, 0, 0);
+    const source = canvas.toDataURL('image/png');
+    if (source.length > 3000000) return;
+    artwork.src = source;
+    renderElementStudio(); updatePreview();
+    $('status').textContent = 'Green edges cleaned. Save the design to keep this correction.';
+  };
+  image.src = artwork.src;
 }
 
 $('canvaImport').addEventListener('change', (event) => {
