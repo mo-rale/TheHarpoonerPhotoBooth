@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#030821">
   <title>The Harpooner PhotoBooth</title>
-  <link rel="stylesheet" href="style.css?v=20261001-18">
+  <link rel="stylesheet" href="style.css?v=20261002-19">
 </head>
 <body>
   <div class="ambient ambient-one"></div>
@@ -74,7 +74,7 @@
             <li><b>✓</b><span><strong>Center yourself</strong><small>Leave a little room around everyone in the frame.</small></span></li>
             <li><b>✓</b><span><strong>Clear your background</strong><small>A simple background keeps the focus on you.</small></span></li>
           </ul>
-          <div class="notice"><span>▣</span><div><strong>Four photos coming up</strong><small>Adjust the timer and filter before starting your session.</small></div></div>
+          <div class="notice"><span>▣</span><div><strong id="sessionSummaryTitle">Four photos coming up</strong><small id="sessionSummaryNote">Adjust the timer and filter before starting your session.</small></div></div>
         </aside>
       </div>
       <p id="camError" class="error" hidden></p>
@@ -105,7 +105,7 @@
           <div id="thumbGrid" class="thumb-grid"></div>
           <div class="session-settings" aria-label="Photo session settings">
             <label><small>Timer</small><select id="sessionTimer" aria-label="Countdown timer"><option value="1">1 sec</option><option value="3" selected>3 sec</option><option value="5">5 sec</option><option value="10">10 sec</option><option value="15">15 sec</option></select></label>
-            <label><small>Photos</small><select id="sessionShots" aria-label="Number of photos"><option value="4" selected>4 shots</option><option value="3" disabled>3 shots · coming soon</option></select></label>
+            <label><small>Photos</small><select id="sessionShots" aria-label="Number of photos"><option value="4" selected>4 shots</option><option value="3">3 shots</option></select></label>
             <label><small>Filter</small><select id="sessionFilter" aria-label="Photo filter"><option value="original" selected>Original</option><option value="bw">Black &amp; white</option><option value="sepia">Sepia</option><option value="vivid">Vivid</option></select></label>
           </div>
         </aside>
@@ -181,6 +181,6 @@
   </dialog>
   <div id="printSheet" aria-hidden="true"></div>
   <a id="adminLink" href="admin.html">Staff gallery</a>
-  <script src="app.js?v=20261001-22"></script>
+  <script src="app.js?v=20261002-23"></script>
 </body>
 </html>

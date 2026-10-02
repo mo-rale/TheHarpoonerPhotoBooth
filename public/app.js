@@ -92,6 +92,7 @@ function show(name) {
 }
 
 function resetThumbs() {
+  $('thumbGrid').classList.toggle('three-shots', CONFIG.shots === 3);
   $('thumbGrid').innerHTML = Array.from({ length: CONFIG.shots }, (_, i) =>
     `<div class="thumb"><span>▣</span><small>Photo ${i + 1}</small></div>`
   ).join('');
@@ -312,8 +313,9 @@ function drawDesignElements(ctx, width, height, theme) {
     ctx.rotate((Number(element.rotation) || 0) * Math.PI / 180);
     ctx.globalAlpha = Math.max(.2, Math.min(1, (Number(element.opacity) || 100) / 100));
     if (element.type === 'photo') {
-      const frameIndex = Math.max(0, Math.min(frames.length - 1, Number(element.slot || 1) - 1));
+      const frameIndex = Math.max(0, Number(element.slot || 1) - 1);
       const frame = frames[frameIndex];
+      if (!frame) { ctx.restore(); return; }
       if (frame) {
         const targetWidth = width * (Number(element.size) || 70) / 100;
         const targetHeight = height * (Number(element.height) || 18) / 100;
@@ -357,11 +359,20 @@ function drawDesignElements(ctx, width, height, theme) {
   });
 }
 
+function drawImageCover(ctx, image, x, y, width, height) {
+  const sourceRatio = image.width / image.height;
+  const targetRatio = width / height;
+  let sx = 0; let sy = 0; let sw = image.width; let sh = image.height;
+  if (sourceRatio > targetRatio) { sw = image.height * targetRatio; sx = (image.width - sw) / 2; }
+  else { sh = image.width / targetRatio; sy = (image.height - sh) / 2; }
+  ctx.drawImage(image, sx, sy, sw, sh, x, y, width, height);
+}
+
 function buildStrip(theme = activeTheme) {
   const width = 900;
   const pad = theme.padding ?? 64;
   const photoWidth = width - pad * 2;
-  const photoHeight = Math.round(photoWidth * .75);
+  const standardPhotoHeight = Math.round(photoWidth * .75);
   const gap = theme.gap ?? 26;
   const footer = theme.footerHeight ?? 230;
   const borderWidth = theme.borderWidth ?? 5;
@@ -374,13 +385,16 @@ function buildStrip(theme = activeTheme) {
   ctx.fillRect(0, 0, width, height);
   drawPattern(ctx, width, height, theme);
   const hasCustomPhotoBoxes = (theme.elements || []).some((element) => element.type === 'photo');
+  const photoHeight = frames.length === 3
+    ? Math.floor((height - footer - pad * 2 - gap * 2) / 3)
+    : standardPhotoHeight;
   if (!theme.blankCanvas && !hasCustomPhotoBoxes) frames.forEach((frame, index) => {
     const y = pad + index * (photoHeight + gap);
     ctx.fillStyle = theme.border;
     ctx.fillRect(pad - borderWidth, y - borderWidth, photoWidth + borderWidth * 2, photoHeight + borderWidth * 2);
     ctx.save();
     ctx.filter = ({ bw: 'grayscale(1)', sepia: 'sepia(.72) contrast(1.04)', vivid: 'saturate(1.35) contrast(1.12)' })[theme.photoEffect] || 'none';
-    ctx.drawImage(frame, pad, y, photoWidth, photoHeight);
+    drawImageCover(ctx, frame, pad, y, photoWidth, photoHeight);
     ctx.restore();
   });
   if (!theme.blankCanvas) {
@@ -606,11 +620,23 @@ function renderThemes() {
     ? themes
     : themes.filter((theme) => theme.category === activeThemeCategory);
   $('themeGrid').innerHTML = visibleThemes.map((theme) => `
-    <button class="theme-card ${theme.id === activeTheme.id ? 'selected' : ''}" type="button" data-theme="${theme.id}" style="--swatch-bg:${theme.bg};--swatch-border:${theme.border};--swatch-accent:${theme.accent}">
+    <button class="theme-card ${theme.id === activeTheme.id ? 'selected' : ''}" type="button" data-theme="${theme.id}" style="--swatch-bg:${theme.bg};--swatch-border:${theme.border};--swatch-accent:${theme.accent}" ${themeSupportsShotCount(theme) ? '' : 'disabled'}>
       <span class="theme-swatch ${theme.pattern || 'solid'}"><i></i><i></i><i></i><i></i><b></b></span>
       <strong>${escapeHtml(theme.name)}</strong><small>${escapeHtml(theme.note)}</small>
     </button>
   `).join('') || '<p class="theme-empty">No designs are saved in this event tab yet.</p>';
+}
+
+function themeSupportsShotCount(theme, shotCount = CONFIG.shots) {
+  const photoSlots = (theme.elements || [])
+    .filter((element) => element.type === 'photo')
+    .map((element) => Number(element.slot || 1));
+  return photoSlots.length === 0 || (photoSlots.length <= shotCount && Math.max(...photoSlots) <= shotCount);
+}
+
+function ensureCompatibleTheme() {
+  if (themeSupportsShotCount(activeTheme)) return;
+  activeTheme = themes.find((theme) => themeSupportsShotCount(theme)) || activeTheme;
 }
 
 async function loadThemes() {
@@ -622,6 +648,7 @@ async function loadThemes() {
       const activeId = activeTheme?.id;
       themes = savedThemes.map(normalizeTheme);
       activeTheme = themes.find((theme) => theme.id === activeId) || themes[0];
+      ensureCompatibleTheme();
       renderThemes();
     }
   } catch (error) {
@@ -727,6 +754,15 @@ $('backToCheck').addEventListener('click', () => show('cameraCheck'));
 $('captureBtn').addEventListener('click', runSession);
 $('sessionTimer').addEventListener('change', (event) => {
   CONFIG.countdownSeconds = Math.max(1, Math.min(15, Number(event.target.value) || 3));
+  $('sessionSummaryNote').textContent = `${CONFIG.shots} photos with a ${CONFIG.countdownSeconds}-second countdown.`;
+});
+$('sessionShots').addEventListener('change', (event) => {
+  CONFIG.shots = Number(event.target.value) === 3 ? 3 : 4;
+  $('sessionSummaryTitle').textContent = CONFIG.shots === 3 ? 'Three photos coming up' : 'Four photos coming up';
+  $('sessionSummaryNote').textContent = `${CONFIG.shots} photos with a ${CONFIG.countdownSeconds}-second countdown.`;
+  resetThumbs();
+  ensureCompatibleTheme();
+  renderThemes();
 });
 $('sessionFilter').addEventListener('change', (event) => {
   sessionPhotoEffect = event.target.value;

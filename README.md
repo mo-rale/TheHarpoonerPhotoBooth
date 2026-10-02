@@ -1,13 +1,13 @@
 # The Harpooner PhotoBooth
 
-A local, event-ready photo booth for **The Harpooner**. It runs in a web browser on Windows, captures four photos from a laptop webcam or supported Canon camera, applies staff-created strip designs, and prepares accurate print layouts for an Epson printer.
+A local, event-ready photo booth for **The Harpooner**. It runs in a web browser on Windows, captures three or four photos from a laptop webcam or supported Canon camera, applies staff-created strip designs, and prepares accurate print layouts for an Epson printer.
 
 The server binds to `127.0.0.1`, so the booth remains available only on the computer running it.
 
 ## Features
 
 - Laptop webcam and external-camera selection
-- Four-photo sessions with an on-screen countdown
+- Three- or four-photo sessions with a configurable on-screen countdown
 - Branded photo strips with downloadable JPEG output
 - Canva-style staff design studio with templates, layers, shapes, text, stickers, and uploaded elements
 - Custom event-category tabs such as General, Valentines, and Graduation
