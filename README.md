@@ -63,6 +63,7 @@ The staff workspace supports:
 
 - Creating, editing, and deleting reusable strip designs
 - Custom event-tab names
+- Separate 3-picture and 4-picture template filters, with picture-count labels alongside event categories
 - Background, text, accent, and border colors
 - Solid, checkerboard, and diagonal-stripe backgrounds
 - Original, black-and-white, sepia, and vivid photo effects
@@ -80,6 +81,8 @@ The staff workspace supports:
 - Keyboard shortcuts for undo/redo, duplicate, delete, and fine positioning
 
 Designs are stored locally in `data/designs.json`.
+
+The booth shows only designs that match the selected photo count. Custom photo boxes must include every slot from Photo 1 through Photo 3 or Photo 4. Standard designs without custom photo boxes adapt to either count and appear in both staff filters.
 
 ### Canva import
 

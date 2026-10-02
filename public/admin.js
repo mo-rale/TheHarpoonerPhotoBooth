@@ -5,6 +5,7 @@ const DEVELOPER_PREVIEW_KEY = 'harpoonerDeveloperPreview';
 let designs = [];
 let editingId = null;
 let activeDesignTab = 'all';
+let activePhotoTab = 'all';
 let designElements = [];
 let selectedElementId = null;
 let zoom = 1;
@@ -396,6 +397,16 @@ function editDesign(design) {
   renderElementStudio(); updatePreview(); renderDesigns(); setSaveState('Saved design'); cleanSavedCanvaArtwork();
 }
 
+function designSupportsPhotoCount(design, count) {
+  const slots = (design.elements || []).filter((element) => element.type === 'photo').map((element) => Number(element.slot || 1));
+  return slots.length === 0 || (new Set(slots).size === count && Array.from({ length: count }, (_, index) => index + 1).every((slot) => slots.includes(slot)));
+}
+
+function designPhotoLabel(design) {
+  const counts = [3, 4].filter((count) => designSupportsPhotoCount(design, count));
+  return counts.length ? `${counts.join(' & ')} pictures` : 'Custom photo layout';
+}
+
 function renderDesigns() {
   const grid = $('designGrid'); grid.replaceChildren(); $('designCount').textContent = designs.length;
   const categories = [...new Set(designs.map((design) => design.category || 'General'))].sort((a, b) => a.localeCompare(b));
@@ -405,14 +416,25 @@ function renderDesigns() {
     button.textContent = category === 'all' ? 'All' : category; button.addEventListener('click', () => { activeDesignTab = category; renderDesigns(); }); return button;
   }));
   $('categoryOptions').replaceChildren(...categories.map((category) => { const option = document.createElement('option'); option.value = category; return option; }));
-  const visible = activeDesignTab === 'all' ? designs : designs.filter((design) => (design.category || 'General') === activeDesignTab);
+  $('designPhotoTabs').replaceChildren(...[
+    { id: 'all', label: 'All picture counts' },
+    { id: '3', label: '3-picture strips' },
+    { id: '4', label: '4-picture strips' },
+  ].map((tab) => {
+    const button = document.createElement('button'); button.type = 'button'; button.className = `collection-tab ${activePhotoTab === tab.id ? 'active' : ''}`;
+    button.textContent = tab.label; button.addEventListener('click', () => { activePhotoTab = tab.id; renderDesigns(); }); return button;
+  }));
+  const visible = designs.filter((design) => (activeDesignTab === 'all' || (design.category || 'General') === activeDesignTab)
+    && (activePhotoTab === 'all' || designSupportsPhotoCount(design, Number(activePhotoTab))));
   visible.forEach((design) => {
     const card = document.createElement('article'); card.className = `design-card ${editingId === design.id ? 'active' : ''}`;
     card.innerHTML = '<div class="design-swatch"><i></i><i></i><i></i><i></i><b></b></div><span class="category-badge"></span><h3></h3><p></p><div class="card-actions"><button class="secondary edit" type="button">Use</button><button class="danger delete" type="button" title="Delete">×</button></div>';
+    if (activePhotoTab === '3' || (designSupportsPhotoCount(design, 3) && !designSupportsPhotoCount(design, 4))) card.querySelector('.design-swatch i').remove();
     const swatch = card.querySelector('.design-swatch'); swatch.style.setProperty('--bg', design.bg); swatch.style.setProperty('--accent', design.accent); swatch.style.setProperty('--border', design.border); swatch.classList.add(design.pattern || 'solid');
-    card.querySelector('h3').textContent = design.name; card.querySelector('.category-badge').textContent = design.category || 'General'; card.querySelector('p').textContent = design.note || 'Custom design';
+    card.querySelector('h3').textContent = design.name; card.querySelector('.category-badge').textContent = `${design.category || 'General'} · ${designPhotoLabel(design)}`; card.querySelector('p').textContent = design.note || 'Custom design';
     card.querySelector('.edit').addEventListener('click', () => editDesign(design)); card.querySelector('.delete').addEventListener('click', () => deleteDesign(design)); grid.appendChild(card);
   });
+  if (!visible.length) { const empty = document.createElement('p'); empty.className = 'empty-state'; empty.textContent = 'No designs match this event and picture count.'; grid.appendChild(empty); }
 }
 
 async function loadDesigns() {

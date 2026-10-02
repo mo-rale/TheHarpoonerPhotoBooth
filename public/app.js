@@ -605,7 +605,8 @@ function openPrintPreview() {
 }
 
 function renderThemes() {
-  const categories = [...new Set(themes.map((theme) => theme.category || 'General'))]
+  const compatibleThemes = themes.filter((theme) => themeSupportsShotCount(theme));
+  const categories = [...new Set(compatibleThemes.map((theme) => theme.category || 'General'))]
     .sort((a, b) => a.localeCompare(b));
   if (activeThemeCategory !== 'all' && !categories.includes(activeThemeCategory)) activeThemeCategory = 'all';
 
@@ -617,11 +618,11 @@ function renderThemes() {
   `).join('');
 
   const visibleThemes = activeThemeCategory === 'all'
-    ? themes
-    : themes.filter((theme) => theme.category === activeThemeCategory);
+    ? compatibleThemes
+    : compatibleThemes.filter((theme) => (theme.category || 'General') === activeThemeCategory);
   $('themeGrid').innerHTML = visibleThemes.map((theme) => `
     <button class="theme-card ${theme.id === activeTheme.id ? 'selected' : ''}" type="button" data-theme="${theme.id}" style="--swatch-bg:${theme.bg};--swatch-border:${theme.border};--swatch-accent:${theme.accent}" ${themeSupportsShotCount(theme) ? '' : 'disabled'}>
-      <span class="theme-swatch ${theme.pattern || 'solid'}"><i></i><i></i><i></i><i></i><b></b></span>
+      <span class="theme-swatch ${theme.pattern || 'solid'}">${'<i></i>'.repeat(CONFIG.shots)}<b></b></span>
       <strong>${escapeHtml(theme.name)}</strong><small>${escapeHtml(theme.note)}</small>
     </button>
   `).join('') || '<p class="theme-empty">No designs are saved in this event tab yet.</p>';
@@ -631,7 +632,7 @@ function themeSupportsShotCount(theme, shotCount = CONFIG.shots) {
   const photoSlots = (theme.elements || [])
     .filter((element) => element.type === 'photo')
     .map((element) => Number(element.slot || 1));
-  return photoSlots.length === 0 || (photoSlots.length <= shotCount && Math.max(...photoSlots) <= shotCount);
+  return photoSlots.length === 0 || (new Set(photoSlots).size === shotCount && Array.from({ length: shotCount }, (_, index) => index + 1).every((slot) => photoSlots.includes(slot)));
 }
 
 function ensureCompatibleTheme() {
