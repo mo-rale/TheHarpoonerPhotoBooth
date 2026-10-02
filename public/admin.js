@@ -377,7 +377,7 @@ function resetForm() {
   $('formTitle').textContent = 'New design';
   $('designForm').reset();
   $('designCategory').value = activeDesignTab === 'all' ? 'General' : activeDesignTab;
-  $('designBg').value = '#43d9e7'; $('designInk').value = '#030522'; $('designAccent').value = '#b9f5f6'; $('designBorder').value = '#f1ffff';
+  $('designBg').value = '#ffffff'; $('designInk').value = '#030522'; $('designAccent').value = '#b9f5f6'; $('designBorder').value = '#f1ffff';
   $('designPattern').value = 'solid'; $('designEffect').value = 'original'; $('designFont').value = 'editorial'; $('designPadding').value = '64'; $('designGap').value = '26'; $('designBorderWidth').value = '5'; $('designFooter').value = '230';
   $('designTagline').value = 'THE AGENT OF TRUTH · BISUCANDIJAY CAMPUS'; $('designShowLogo').checked = true; $('designShowDate').checked = true; $('designBlankCanvas').checked = true;
   designElements = []; selectedElementId = null; resetHistory(); renderElementStudio();
